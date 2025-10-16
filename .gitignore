@@ -86,8 +86,6 @@ INICIO_RAPIDO*.md
 README_CORRECCIONES.md
 
 # Archivos de migración temporal
-migrate_*.py
-add_*.py
 
 # Scripts batch específicos
 setup_and_demo.bat
