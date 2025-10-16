@@ -312,7 +312,7 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alertSuccess.textContent = `✓ ${result.message} (ID: ${result.session_id})`;
+                    alertSuccess.textContent = `✓ ${result.message}`;
                     alertSuccess.style.display = 'block';
                     document.getElementById('manualEntryForm').reset();
                     document.getElementById('puntajeValue').textContent = '3';

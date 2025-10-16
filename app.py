@@ -267,6 +267,10 @@ def manual_entry():
 @login_required
 def get_analytics():
     """Analytics para profesor usando AnalyticsService"""
+    import time
+    inicio = time.time()
+    print(f"🔵 Iniciando /api/analytics para profesor ID={current_user.id if hasattr(current_user, 'id') else 'N/A'}")
+    
     if not isinstance(current_user, Profesor):
         return jsonify({
             'success': False, 
@@ -275,7 +279,11 @@ def get_analytics():
     
     try:
         analytics_service = AnalyticsService()
+        print(f"  ⏱️ Llamando a get_analytics_profesor...")
         resultado = analytics_service.get_analytics_profesor(current_user.id)
+        
+        duracion = time.time() - inicio
+        print(f"✅ /api/analytics completado en {duracion:.2f}s")
         
         if resultado.get('success', True):
             return jsonify(resultado), HTTP_OK
@@ -284,7 +292,8 @@ def get_analytics():
             
     except Exception as e:
         import traceback
-        print("Error en analytics:", str(e))
+        duracion = time.time() - inicio
+        print(f"❌ Error en analytics después de {duracion:.2f}s:", str(e))
         print(traceback.format_exc())
         return jsonify({
             'error': str(e),

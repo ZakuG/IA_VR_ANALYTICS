@@ -21,6 +21,9 @@ def convert_to_native_types(obj):
     if isinstance(obj, np.integer):
         return int(obj)
     elif isinstance(obj, np.floating):
+        # Sanitizar NaN, inf, -inf para JSON
+        if np.isnan(obj) or np.isinf(obj):
+            return 0
         return float(obj)
     elif isinstance(obj, np.bool_):
         return bool(obj)
