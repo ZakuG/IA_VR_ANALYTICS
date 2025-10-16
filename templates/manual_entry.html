@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Manual de Sesión - VR Analytics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        button {
+            padding: 14px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .button-group {
+            margin-top: 30px;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📝 Registro Manual de Sesión VR</h2>
+        <p class="subtitle">Registra manualmente los datos de una sesión de realidad virtual cuando no haya conexión desde la Meta Quest</p>
+        
+        <div id="alertSuccess" class="alert alert-success"></div>
+        <div id="alertError" class="alert alert-error"></div>
+
+        <form id="manualEntryForm">
+            <div class="form-group">
+                <label for="estudiante">Estudiante *</label>
+                <select id="estudiante" name="estudiante" required>
+                    <option value="">Selecciona un estudiante...</option>
+                </select>
+                <div class="help-text">Selecciona el estudiante que completó la sesión</div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="maqueta">Maqueta/Escenario *</label>
+                    <select id="maqueta" name="maqueta" required>
+                        <option value="">Selecciona una maqueta...</option>
+                        <option value="Aire acondicionado">❄️ Aire Acondicionado</option>
+                        <option value="Motor">⚙️ Motor</option>
+                        <option value="Laboratorio de Química">🧪 Laboratorio de Química</option>
+                        <option value="Anatomía Humana">🫀 Anatomía Humana</option>
+                        <option value="Sistema Solar">🪐 Sistema Solar</option>
+                        <option value="Ecosistema Marino">🐠 Ecosistema Marino</option>
+                        <option value="Física Mecánica">⚙️ Física Mecánica</option>
+                        <option value="Circuitos Eléctricos">⚡ Circuitos Eléctricos</option>
+                        <option value="Geografía Mundial">🌍 Geografía Mundial</option>
+                        <option value="Historia Antigua">🏛️ Historia Antigua</option>
+                        <option value="Otro">➕ Otro (especificar abajo)</option>
+                    </select>
+                    <input type="text" id="maqueta_otra" name="maqueta_otra" style="display:none; margin-top: 10px;" placeholder="Especifica la maqueta...">
+                    <div class="help-text">Selecciona el escenario o maqueta utilizado</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tiempo">Tiempo (segundos) *</label>
+                    <input type="number" id="tiempo_segundos" name="tiempo_segundos" required min="0" step="1" placeholder="Ej: 60" value="60">
+                    <div class="help-text">Duración de la sesión en segundos</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="puntaje">Puntaje *</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="range" id="puntaje" name="puntaje" required min="1" max="5" step="0.1" value="3" style="flex: 1;" oninput="document.getElementById('puntajeValue').textContent = this.value">
+                        <span id="puntajeValue" style="font-size: 24px; font-weight: bold; color: #667eea; min-width: 50px; text-align: center;">3</span>
+                        <span style="color: #999;">/ 5</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: #999; margin-top: 5px;">
+                        <span>⭐ Bajo</span>
+                        <span>⭐⭐⭐ Regular</span>
+                        <span>⭐⭐⭐⭐⭐ Excelente</span>
+                    </div>
+                    <div class="help-text">Puntaje obtenido (1-5 puntos, escala académica)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="interacciones">Interacciones con IA</label>
+                    <input type="number" id="interacciones" name="interacciones" min="0" max="50" value="0" placeholder="Ej: 5">
+                    <div class="help-text">Número de veces que interactuó con el asistente IA (0-50)</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="respuestas">Detalle de Respuestas (Opcional)</label>
+                <textarea id="respuestas" name="respuestas" rows="4" placeholder='Ej: ["Respuesta correcta 1", "Respuesta incorrecta", "Respuesta correcta 2"]'></textarea>
+                <div class="help-text">Lista de respuestas o notas adicionales (formato JSON opcional)</div>
+            </div>
+
+            <div class="button-group">
+                <button type="submit">Registrar Sesión</button>
+                <button type="button" class="btn-secondary" onclick="window.location.href='/dashboard'">Cancelar</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Mostrar campo personalizado cuando se selecciona "Otro"
+        document.getElementById('maqueta').addEventListener('change', function() {
+            const otraInput = document.getElementById('maqueta_otra');
+            if (this.value === 'Otro') {
+                otraInput.style.display = 'block';
+                otraInput.required = true;
+            } else {
+                otraInput.style.display = 'none';
+                otraInput.required = false;
+                otraInput.value = '';
+            }
+        });
+
+        // Cargar lista de estudiantes
+        async function loadStudents() {
+            try {
+                const response = await fetch('/api/estudiantes');
+                const data = await response.json();
+                
+                const select = document.getElementById('estudiante');
+                data.forEach(estudiante => {
+                    const option = document.createElement('option');
+                    option.value = estudiante.id;
+                    option.textContent = `${estudiante.nombre} - ${estudiante.codigo}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error al cargar estudiantes:', error);
+            }
+        }
+
+        // Enviar formulario
+        document.getElementById('manualEntryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const alertSuccess = document.getElementById('alertSuccess');
+            const alertError = document.getElementById('alertError');
+            
+            // Ocultar alertas previas
+            alertSuccess.style.display = 'none';
+            alertError.style.display = 'none';
+
+            // Determinar nombre de maqueta
+            let nombreMaqueta = document.getElementById('maqueta').value;
+            if (nombreMaqueta === 'Otro') {
+                nombreMaqueta = document.getElementById('maqueta_otra').value;
+            }
+
+            // Preparar datos
+            let respuestas = [];
+            const respuestasText = document.getElementById('respuestas').value.trim();
+            
+            if (respuestasText) {
+                try {
+                    respuestas = JSON.parse(respuestasText);
+                } catch (e) {
+                    // Si no es JSON válido, convertir a array de strings
+                    respuestas = respuestasText.split('\n').filter(r => r.trim());
+                }
+            }
+
+            // Obtener tiempo en segundos directamente
+            const tiempoSegundos = parseInt(document.getElementById('tiempo_segundos').value);
+
+            const data = {
+                estudiante_id: parseInt(document.getElementById('estudiante').value),
+                maqueta: nombreMaqueta,
+                tiempo_segundos: tiempoSegundos,
+                puntaje: parseFloat(document.getElementById('puntaje').value),
+                interacciones_ia: parseInt(document.getElementById('interacciones').value) || 0,
+                respuestas: respuestas
+            };
+
+            try {
+                const response = await fetch('/api/session/manual', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alertSuccess.textContent = `✓ ${result.message} (ID: ${result.session_id})`;
+                    alertSuccess.style.display = 'block';
+                    document.getElementById('manualEntryForm').reset();
+                    document.getElementById('puntajeValue').textContent = '3';
+                    
+                    // Redirigir al dashboard después de 2 segundos
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 2000);
+                } else {
+                    alertError.textContent = `✗ ${result.message}`;
+                    alertError.style.display = 'block';
+                }
+            } catch (error) {
+                alertError.textContent = '✗ Error al registrar la sesión. Intenta nuevamente.';
+                alertError.style.display = 'block';
+                console.error('Error:', error);
+            }
+        });
+
+        // Cargar estudiantes al iniciar
+        loadStudents();
+    </script>
+</body>
+</html>

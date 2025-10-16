@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Dashboard VR - {{ estudiante.nombre }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .insights-list {
+            list-style: none;
+        }
+
+        .insights-list li {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .maqueta-card {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .maqueta-header {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .maqueta-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .profesor-section {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .profesor-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .profesor-info {
+            flex: 1;
+        }
+
+        .profesor-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .profesor-email {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .profesor-list-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .profesor-list-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge-current {
+            background: #28a745;
+            color: white;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .maqueta-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Estilos para modal de maquetas */
+        .modal-maqueta {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+        }
+
+        .modal-maqueta-content {
+            background-color: white;
+            margin: 3% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-maqueta-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            padding: 20px 30px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-maqueta-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .close-maqueta {
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .close-maqueta:hover {
+            transform: scale(1.2);
+        }
+
+        .modal-maqueta-body {
+            padding: 30px;
+            max-height: calc(90vh - 100px);
+            overflow-y: auto;
+        }
+
+        .maqueta-selector-est {
+            margin-bottom: 20px;
+        }
+
+        .maqueta-selector-est select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .maqueta-selector-est select:focus {
+            outline: none;
+            border-color: #28a745;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+        }
+
+        .maqueta-stats-est {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .maqueta-stat-card-est {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+        }
+
+        .maqueta-stat-card-est h4 {
+            color: #28a745;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .maqueta-stat-card-est .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .sessions-table-est {
+            margin-top: 20px;
+        }
+
+        .sessions-table-est table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .sessions-table-est th {
+            background: #28a745;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .sessions-table-est td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sessions-table-est tr:hover {
+            background: #f1f8f4;
+        }
+
+        /* ============================================ */
+        /* SPINNER, TOAST Y MODAL - MISMO QUE DASHBOARD PROFESOR */
+        /* ============================================ */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .spinner-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #28a745;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner-text {
+            color: #28a745;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            min-width: 300px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(400px);
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        .toast.hiding {
+            animation: slideOut 0.3s ease forwards;
+        }
+
+        @keyframes slideIn {
+            to { transform: translateX(0); }
+        }
+
+        @keyframes slideOut {
+            to { transform: translateX(400px); }
+        }
+
+        .toast-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-message {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .toast-progress {
+            height: 4px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .toast-progress-bar {
+            height: 100%;
+            width: 100%;
+            animation: progress 4s linear forwards;
+        }
+
+        @keyframes progress {
+            to { width: 0%; }
+        }
+
+        .toast.success { border-left: 4px solid #28a745; }
+        .toast.success .toast-progress-bar { background: #28a745; }
+        
+        .toast.error { border-left: 4px solid #dc3545; }
+        .toast.error .toast-progress-bar { background: #dc3545; }
+        
+        .toast.warning { border-left: 4px solid #ffc107; }
+        .toast.warning .toast-progress-bar { background: #ffc107; }
+        
+        .toast.info { border-left: 4px solid #17a2b8; }
+        .toast.info .toast-progress-bar { background: #17a2b8; }
+
+        .confirm-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .confirm-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .confirm-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 90%;
+            transform: scale(0.7);
+            transition: transform 0.3s ease;
+        }
+
+        .confirm-modal.active .confirm-modal-content {
+            transform: scale(1);
+        }
+
+        .confirm-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .confirm-modal-icon {
+            font-size: 48px;
+        }
+
+        .confirm-modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .confirm-modal-message {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .confirm-modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-confirm {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-confirm.danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-confirm.danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .btn-confirm.primary {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-confirm.primary:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        /* Transiciones */
+        .stat-card, .chart-card {
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover, .chart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn {
+            transition: all 0.3s ease;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <div class="spinner-text">Cargando datos...</div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Confirmation Modal -->
+    <div class="confirm-modal" id="confirmModal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <div class="confirm-modal-icon" id="confirmIcon">⚠️</div>
+                <div class="confirm-modal-title" id="confirmTitle">Confirmación</div>
+            </div>
+            <div class="confirm-modal-message" id="confirmMessage"></div>
+            <div class="confirm-modal-buttons">
+                <button class="btn-cancel" onclick="hideConfirmModal()">Cancelar</button>
+                <button class="btn-confirm" id="confirmButton">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🎓 Mi Dashboard VR</h1>
+                <p>Hola, {{ estudiante.nombre }}</p>
+            </div>
+            <div class="header-buttons">
+                <button class="btn btn-primary" onclick="refreshData()">🔄 Actualizar</button>
+                <button class="btn btn-primary" onclick="verMisMaquetas()">📊 Ver por Maqueta</button>
+                <button class="btn btn-success" onclick="openProfesorModal()">👨‍🏫 Mis Profesores</button>
+                <button class="btn btn-logout" onclick="confirmLogout()">🚪 Cerrar Sesión</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">Cargando tus datos...</div>
+
+        <div id="content" style="display: none;">
+            <!-- Profesor Actual -->
+            <div id="profesorActual" class="profesor-section" style="display: none;">
+                <h3 style="margin-bottom: 15px; color: #333;">📚 Profesor Actual</h3>
+                <div id="profesorActualCard"></div>
+            </div>
+
+            <!-- Filtro por Profesor -->
+            <div class="section" id="filtroProfesor" style="display: none;">
+                <div class="section-title">🔍 Filtrar por Profesor</div>
+                <div style="display: flex; gap: 15px; align-items: center; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <label for="profesorFilter" style="font-weight: 600; color: #333;">Seleccionar Profesor:</label>
+                    <select id="profesorFilter" onchange="filtrarPorProfesor()" style="flex: 1; padding: 10px; border: 2px solid #667eea; border-radius: 5px; font-size: 16px;">
+                        <option value="">Todos los profesores</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="limpiarFiltroProfesor()">Limpiar</button>
+                </div>
+            </div>
+
+            <!-- Estadísticas Generales -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total de Sesiones</div>
+                    <div class="stat-value" id="totalSesiones">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Puntaje Promedio</div>
+                    <div class="stat-value" id="puntajePromedio">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Mejor Puntaje</div>
+                    <div class="stat-value" id="mejorPuntaje">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Tiempo Promedio</div>
+                    <div class="stat-value" id="tiempoPromedio">0</div>
+                    <div class="stat-label">minutos</div>
+                </div>
+            </div>
+
+            <!-- Insights Personalizados -->
+            <div class="section">
+                <div class="section-title">💡 Insights Personalizados</div>
+                <ul id="insightsList" class="insights-list"></ul>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="grid-2">
+                <div class="section">
+                    <div class="section-title">📈 Tu Progreso</div>
+                    <div class="chart-container">
+                        <canvas id="progresoChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">📊 Puntajes por Maqueta</div>
+                    <div class="chart-container">
+                        <canvas id="maquetasChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalle por Maqueta -->
+            <div class="section">
+                <div class="section-title">🎮 Análisis por Maqueta</div>
+                <div id="maquetasDetalle"></div>
+            </div>
+        </div>
+
+        <!-- Sin datos -->
+        <div id="noData" class="no-data" style="display: none;">
+            <h2>👋 ¡Bienvenido!</h2>
+            <p>Aún no tienes sesiones registradas.</p>
+            <p>Comienza a usar el sistema VR para ver tus estadísticas aquí.</p>
+        </div>
+    </div>
+
+    <!-- Modal de Profesores -->
+    <div id="profesorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>👨‍🏫 Gestión de Profesores</h2>
+                <span class="close" onclick="closeProfesorModal()">&times;</span>
+            </div>
+            <div id="profesorModalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // FUNCIONES UX/UI PROFESIONALES
+        // ============================================
+        
+        function showLoading(message = 'Cargando datos...') {
+            const overlay = document.getElementById('loadingOverlay');
+            const text = overlay.querySelector('.spinner-text');
+            text.textContent = message;
+            overlay.classList.add('active');
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.remove('active');
+        }
+
+        function showToast(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type]}</div>
+                <div class="toast-content">
+                    <div class="toast-message">${message}</div>
+                    <div class="toast-progress">
+                        <div class="toast-progress-bar"></div>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('hiding');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        let confirmCallback = null;
+
+        function showConfirm(message, title = 'Confirmación', icon = '⚠️', confirmText = 'Confirmar', confirmClass = 'primary') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirmModal');
+                const titleEl = document.getElementById('confirmTitle');
+                const iconEl = document.getElementById('confirmIcon');
+                const messageEl = document.getElementById('confirmMessage');
+                const confirmBtn = document.getElementById('confirmButton');
+
+                titleEl.textContent = title;
+                iconEl.textContent = icon;
+                messageEl.textContent = message;
+                confirmBtn.textContent = confirmText;
+                confirmBtn.className = `btn-confirm ${confirmClass}`;
+
+                confirmCallback = () => {
+                    resolve(true);
+                    hideConfirmModal();
+                };
+
+                confirmBtn.onclick = confirmCallback;
+                modal.classList.add('active');
+
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        resolve(false);
+                        hideConfirmModal();
+                    }
+                };
+            });
+        }
+
+        function hideConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('active');
+            confirmCallback = null;
+        }
+
+        async function confirmLogout() {
+            const confirmed = await showConfirm(
+                '¿Estás seguro de que deseas cerrar sesión?',
+                'Cerrar Sesión',
+                '🚪',
+                'Cerrar Sesión',
+                'danger'
+            );
+
+            if (confirmed) {
+                logout();
+            }
+        }
+
+        // ============================================
+        // FUNCIONES PRINCIPALES
+        // ============================================
+        
+        let progresoChart = null;
+        let maquetasChart = null;
+
+        // Cargar datos del estudiante
+        async function refreshData() {
+            showLoading('Cargando tus datos...');
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('noData').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/estudiante/analytics');
+                const data = await response.json();
+
+                console.log('📊 Datos recibidos:', data);
+
+                if (!data.success || data.total_sesiones === 0) {
+                    hideLoading();
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('noData').style.display = 'block';
+                    loadProfesores(); // Cargar profesores de todos modos
+                    showToast('No tienes sesiones registradas todavía', 'info');
+                    return;
+                }
+
+                // Actualizar estadísticas con validación defensiva
+                document.getElementById('totalSesiones').textContent = data.total_sesiones || 0;
+                
+                const stats = data.estadisticas || {};
+                document.getElementById('puntajePromedio').textContent = 
+                    (stats.puntaje_promedio || 0).toFixed(1) + ' / 5';
+                document.getElementById('mejorPuntaje').textContent = 
+                    (stats.puntaje_maximo || 0).toFixed(1) + ' / 5';
+                document.getElementById('tiempoPromedio').textContent = 
+                    (stats.tiempo_promedio_minutos || 0).toFixed(1);
+
+                // Insights
+                const insightsList = document.getElementById('insightsList');
+                insightsList.innerHTML = '';
+                const insights = data.insights || [];
+                insights.forEach(insight => {
+                    const li = document.createElement('li');
+                    li.textContent = insight;
+                    insightsList.appendChild(li);
+                });
+
+                // Gráfico de progreso
+                updateProgresoChart(data.progreso_temporal || []);
+
+                // Gráfico de maquetas
+                updateMaquetasChart(data.por_maqueta || []);
+
+                // Detalle por maqueta
+                displayMaquetasDetalle(data.por_maqueta || []);
+
+                // Cargar información de profesores
+                loadProfesores();
+
+                hideLoading();
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                showToast('Datos actualizados correctamente', 'success');
+            } catch (error) {
+                console.error('❌ Error al cargar datos:', error);
+                hideLoading();
+                document.getElementById('loading').innerHTML = `
+                    <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
+                        <h3 style="color: #dc3545;">⚠️ Error al cargar datos</h3>
+                        <p style="color: #666; margin: 15px 0;">${error.message}</p>
+                        <button onclick="refreshData()" class="btn btn-primary">🔄 Reintentar</button>
+                    </div>
+                `;
+                showToast('Error al cargar datos: ' + error.message, 'error');
+            }
+        }
+
+        // Gráfico de progreso temporal
+        function updateProgresoChart(progreso) {
+            const ctx = document.getElementById('progresoChart').getContext('2d');
+            
+            if (progresoChart) {
+                progresoChart.destroy();
+            }
+
+            // Validar y transformar datos
+            let labels, data;
+            
+            if (!progreso || !Array.isArray(progreso) || progreso.length === 0) {
+                // Sin datos
+                labels = ['Sin datos'];
+                data = [0];
+            } else {
+                // progreso es un array de {sesion, puntaje, fecha}
+                labels = progreso.map(p => p.fecha || 'N/A');
+                data = progreso.map(p => p.puntaje || 0);
+            }
+
+            progresoChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Puntaje',
+                        data: data,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de puntajes por maqueta
+        function updateMaquetasChart(porMaqueta) {
+            const ctx = document.getElementById('maquetasChart').getContext('2d');
+            
+            if (maquetasChart) {
+                maquetasChart.destroy();
+            }
+
+            // Validar y transformar datos
+            let maquetas, puntajes;
+            
+            if (!porMaqueta || !Array.isArray(porMaqueta) || porMaqueta.length === 0) {
+                // Sin datos
+                maquetas = ['Sin datos'];
+                puntajes = [0];
+            } else {
+                // porMaqueta es un array de {maqueta, sesiones, puntaje_promedio, mejor}
+                maquetas = porMaqueta.map(m => m.maqueta || 'Sin nombre');
+                puntajes = porMaqueta.map(m => m.puntaje_promedio || 0);
+            }
+
+            maquetasChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: maquetas,
+                    datasets: [{
+                        label: 'Puntaje Promedio',
+                        data: puntajes,
+                        backgroundColor: [
+                            '#667eea',
+                            '#764ba2',
+                            '#f093fb',
+                            '#4facfe',
+                            '#43e97b'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        // Detalle por maqueta
+        function displayMaquetasDetalle(porMaqueta) {
+            const container = document.getElementById('maquetasDetalle');
+            container.innerHTML = '';
+
+            if (!porMaqueta || !Array.isArray(porMaqueta) || porMaqueta.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <p style="font-size: 18px;">📊 No hay datos de maquetas todavía</p>
+                        <p style="font-size: 14px;">Completa sesiones para ver tu progreso</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // porMaqueta es un array de objetos
+            for (const stats of porMaqueta) {
+                const card = document.createElement('div');
+                card.className = 'maqueta-card';
+                card.innerHTML = `
+                    <div class="maqueta-header">🎮 ${stats.maqueta || 'Sin nombre'}</div>
+                    <div class="maqueta-stats">
+                        <div><strong>Sesiones:</strong> ${stats.sesiones || 0}</div>
+                        <div><strong>Promedio:</strong> ${(stats.puntaje_promedio || 0).toFixed(1)} / 5</div>
+                        <div><strong>Mejor:</strong> ${(stats.mejor || 0).toFixed(1)} / 5</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        // Cargar profesores
+        async function loadProfesores() {
+            try {
+                const response = await fetch('/api/estudiante/profesores');
+                const data = await response.json();
+
+                if (data.success && data.mis_profesores && data.mis_profesores.length > 0) {
+                    // Mostrar sección de profesores
+                    document.getElementById('profesorActual').style.display = 'block';
+                    
+                    let html = '';
+                    data.mis_profesores.forEach(prof => {
+                        html += `
+                            <div class="profesor-card" style="margin-bottom: 10px;">
+                                <div class="profesor-info">
+                                    <div class="profesor-name">${prof.nombre}</div>
+                                    <div class="profesor-email">${prof.email}</div>
+                                    <div class="profesor-email">${prof.institucion || 'Sin institución'}</div>
+                                </div>
+                                <div>
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 24px; font-weight: bold; color: #667eea;">${prof.total_sesiones}</div>
+                                        <div style="font-size: 12px; color: #666;">sesiones</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('profesorActualCard').innerHTML = html;
+                    
+                    // Llenar selector de filtro si hay más de un profesor
+                    if (data.mis_profesores.length > 1) {
+                        document.getElementById('filtroProfesor').style.display = 'block';
+                        const select = document.getElementById('profesorFilter');
+                        select.innerHTML = '<option value="">Todos los profesores</option>';
+                        
+                        data.mis_profesores.forEach(prof => {
+                            const option = document.createElement('option');
+                            option.value = prof.id;
+                            option.textContent = `${prof.nombre} (${prof.total_sesiones} sesiones)`;
+                            select.appendChild(option);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar profesores:', error);
+            }
+        }
+
+        // Filtrar analytics por profesor específico
+        async function filtrarPorProfesor() {
+            const profesorId = document.getElementById('profesorFilter').value;
+            
+            if (!profesorId) {
+                // Si no hay profesor seleccionado, recargar datos generales
+                await refreshData();
+                return;
+            }
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('content').style.display = 'none';
+            
+            try {
+                const response = await fetch(`/api/estudiante/analytics-profesor/${profesorId}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    alert(data.message || 'Error al cargar datos del profesor');
+                    return;
+                }
+                
+                // Actualizar estadísticas con datos filtrados
+                document.getElementById('totalSesiones').textContent = data.total_sesiones;
+                document.getElementById('puntajePromedio').textContent = data.estadisticas.puntaje_promedio ? data.estadisticas.puntaje_promedio.toFixed(1) + ' / 5' : '0';
+                document.getElementById('mejorPuntaje').textContent = data.estadisticas.puntaje_maximo ? data.estadisticas.puntaje_maximo.toFixed(1) + ' / 5' : '0';
+                document.getElementById('tiempoPromedio').textContent = data.estadisticas.tiempo_promedio_minutos ? data.estadisticas.tiempo_promedio_minutos.toFixed(1) : '0';
+                
+                // Actualizar insights
+                const insightsList = document.getElementById('insightsList');
+                insightsList.innerHTML = '';
+                data.insights.forEach(insight => {
+                    const li = document.createElement('li');
+                    li.textContent = insight;
+                    insightsList.appendChild(li);
+                });
+                
+                // Actualizar gráficos
+                updateProgresoChart(data.progreso_temporal);
+                updateMaquetasChart(data.por_maqueta);
+                displayMaquetasDetalle(data.por_maqueta);
+                
+                // Guardar sesiones filtradas para el modal de maquetas
+                misSesiones = data.sesiones;
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+            } catch (error) {
+                console.error('Error al filtrar por profesor:', error);
+                document.getElementById('loading').textContent = 'Error al filtrar datos. Intenta nuevamente.';
+            }
+        }
+        
+        // Limpiar filtro de profesor
+        function limpiarFiltroProfesor() {
+            document.getElementById('profesorFilter').value = '';
+            refreshData();
+        }
+
+        // Modal de profesores
+        async function openProfesorModal() {
+            document.getElementById('profesorModal').style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/estudiante/profesores');
+                const data = await response.json();
+
+                let html = '<h3 style="margin-bottom: 15px;">Profesores Disponibles</h3>';
+                
+                if (data.profesores_disponibles.length === 0) {
+                    html += '<p>No hay profesores disponibles.</p>';
+                } else {
+                    data.profesores_disponibles.forEach(profesor => {
+                        const isInscrito = profesor.inscrito;
+                        html += `
+                            <div class="profesor-list-item" onclick="${!isInscrito ? `inscribirseProfesor(${profesor.id}, '${profesor.nombre}')` : ''}" style="${isInscrito ? 'opacity: 0.7; cursor: default;' : ''}">
+                                <div class="profesor-name">
+                                    ${profesor.nombre}
+                                    ${isInscrito ? '<span class="badge badge-current">✓ Inscrito</span>' : ''}
+                                </div>
+                                <div class="profesor-email">${profesor.email}</div>
+                                <div class="profesor-email">${profesor.institucion || 'Sin institución'}</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                document.getElementById('profesorModalContent').innerHTML = html;
+            } catch (error) {
+                console.error('Error al cargar profesores:', error);
+                document.getElementById('profesorModalContent').innerHTML = '<p>Error al cargar profesores.</p>';
+            }
+        }
+
+        function closeProfesorModal() {
+            document.getElementById('profesorModal').style.display = 'none';
+        }
+
+        // Inscribirse con profesor
+        async function inscribirseProfesor(profesorId, profesorNombre) {
+            const confirmed = await showConfirm(
+                `¿Deseas inscribirte con el profesor ${profesorNombre}?`,
+                'Inscripción a Profesor',
+                '👨‍🏫',
+                'Inscribirme',
+                'primary'
+            );
+
+            if (!confirmed) return;
+
+            showLoading('Procesando inscripción...');
+
+            try {
+                const response = await fetch('/api/estudiante/inscribirse', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ profesor_id: profesorId })
+                });
+
+                const data = await response.json();
+
+                hideLoading();
+
+                if (data.success) {
+                    if (data.ya_inscrito) {
+                        showToast('Ya estás inscrito con este profesor', 'info');
+                    } else {
+                        showToast(`¡Te has inscrito exitosamente con ${profesorNombre}!`, 'success');
+                    }
+                    closeProfesorModal();
+                    refreshData();  // Recargar datos para mostrar el nuevo profesor
+                } else {
+                    showToast('Error: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error al inscribirse:', error);
+                hideLoading();
+                showToast('Error al procesar la solicitud', 'error');
+            }
+        }
+
+        // Cerrar sesión
+        function logout() {
+            window.location.href = '/logout';
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('profesorModal');
+            if (event.target === modal) {
+                closeProfesorModal();
+            }
+            const modalMaqueta = document.getElementById('maquetaModalEstudiante');
+            if (event.target === modalMaqueta) {
+                cerrarModalMaquetaEstudiante();
+            }
+        }
+
+        // Funciones para modal de maquetas del estudiante
+        let misSesiones = [];
+        let misProfesores = [];
+
+        async function verMisMaquetas() {
+            showLoading('Cargando maquetas...');
+            try {
+                const response = await fetch('/api/estudiante/analytics');
+                const data = await response.json();
+
+                if (!data.sesiones || data.sesiones.length === 0) {
+                    hideLoading();
+                    showToast('No tienes sesiones registradas aún', 'info');
+                    return;
+                }
+
+                misSesiones = data.sesiones;
+
+                // Obtener profesores únicos de las sesiones
+                const profesoresMap = new Map();
+                misSesiones.forEach(s => {
+                    if (s.profesor) {
+                        profesoresMap.set(s.profesor.id, s.profesor.nombre);
+                    }
+                });
+                misProfesores = Array.from(profesoresMap, ([id, nombre]) => ({ id, nombre }));
+
+                // Obtener maquetas únicas
+                const maquetasUnicas = [...new Set(misSesiones.map(s => s.maqueta))];
+
+                // Mostrar modal
+                document.getElementById('maquetaModalEstudiante').style.display = 'block';
+
+                // Llenar selector de maquetas
+                const select = document.getElementById('maquetaSelectEst');
+                select.innerHTML = '<option value="">Selecciona una maqueta...</option>';
+                maquetasUnicas.forEach(maqueta => {
+                    const option = document.createElement('option');
+                    option.value = maqueta;
+                    option.textContent = maqueta;
+                    select.appendChild(option);
+                });
+
+                // Llenar selector de profesores
+                const profesorSelect = document.getElementById('profesorSelectModal');
+                profesorSelect.innerHTML = '<option value="">Todos los profesores</option>';
+                misProfesores.forEach(prof => {
+                    const option = document.createElement('option');
+                    option.value = prof.id;
+                    option.textContent = prof.nombre;
+                    profesorSelect.appendChild(option);
+                });
+
+                hideLoading();
+
+            } catch (error) {
+                console.error('Error:', error);
+                hideLoading();
+                showToast('Error al cargar tus sesiones', 'error');
+            }
+        }
+
+        function cerrarModalMaquetaEstudiante() {
+            document.getElementById('maquetaModalEstudiante').style.display = 'none';
+        }
+
+        function filtrarMisMaquetas() {
+            showLoading('Filtrando sesiones...');
+            const maquetaSeleccionada = document.getElementById('maquetaSelectEst').value;
+            const profesorSeleccionado = document.getElementById('profesorSelectModal').value;
+
+            if (!maquetaSeleccionada) {
+                document.getElementById('maquetaResultadosEst').innerHTML = '<div class="no-data">Por favor selecciona una maqueta</div>';
+                return;
+            }
+
+            // Filtrar por maqueta
+            let sesionesFiltradas = misSesiones.filter(s => s.maqueta === maquetaSeleccionada);
+
+            // Filtrar por profesor si está seleccionado
+            if (profesorSeleccionado) {
+                sesionesFiltradas = sesionesFiltradas.filter(s => 
+                    s.profesor && s.profesor.id == profesorSeleccionado
+                );
+            }
+
+            if (sesionesFiltradas.length === 0) {
+                document.getElementById('maquetaResultadosEst').innerHTML = '<div class="no-data">No tienes sesiones para esta combinación de filtros</div>';
+                return;
+            }
+
+            // Calcular estadísticas
+            const totalSesiones = sesionesFiltradas.length;
+            const puntajes = sesionesFiltradas.map(s => s.puntaje);
+            const tiempos = sesionesFiltradas.map(s => s.tiempo_segundos / 60);
+
+            const promedioPuntaje = (puntajes.reduce((a, b) => a + b, 0) / totalSesiones).toFixed(2);
+            const promedioTiempo = (tiempos.reduce((a, b) => a + b, 0) / totalSesiones).toFixed(2);
+            const mejorPuntaje = Math.max(...puntajes).toFixed(2);
+            const peorPuntaje = Math.min(...puntajes).toFixed(2);
+            
+            const filtroProfesor = profesorSeleccionado ? misProfesores.find(p => p.id == profesorSeleccionado)?.nombre : 'Todos';
+
+            // Generar HTML
+            let html = `
+                <div class="maqueta-stats-est">
+                    <div class="maqueta-stat-card-est">
+                        <h4>MIS SESIONES</h4>
+                        <div class="value">${totalSesiones}</div>
+                    </div>
+                    <div class="maqueta-stat-card-est">
+                        <h4>PROMEDIO</h4>
+                        <div class="value">${promedioPuntaje} / 5</div>
+                    </div>
+                    <div class="maqueta-stat-card-est">
+                        <h4>MEJOR PUNTAJE</h4>
+                        <div class="value">${mejorPuntaje} / 5</div>
+                    </div>
+                    <div class="maqueta-stat-card-est">
+                        <h4>PEOR PUNTAJE</h4>
+                        <div class="value">${peorPuntaje} / 5</div>
+                    </div>
+                    <div class="maqueta-stat-card-est">
+                        <h4>TIEMPO PROMEDIO</h4>
+                        <div class="value">${promedioTiempo} min</div>
+                    </div>
+                </div>
+
+                <div class="sessions-table-est">
+                    <h3>📋 Mis Sesiones en ${maquetaSeleccionada} ${profesorSeleccionado ? '- Profesor: ' + filtroProfesor : ''}</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Puntaje</th>
+                                <th>Tiempo</th>
+                                <th>IA Usada</th>
+                                <th>Evaluado por</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            sesionesFiltradas.forEach(sesion => {
+                const fecha = new Date(sesion.fecha).toLocaleDateString('es-ES');
+                const tiempo = (sesion.tiempo_segundos / 60).toFixed(2);
+                const puntajeClass = sesion.puntaje >= 3 ? 'good' : 'risk';
+                const profesorNombre = sesion.profesor ? sesion.profesor.nombre : 'Sin registro';
+
+                html += `
+                    <tr>
+                        <td>${fecha}</td>
+                        <td class="${puntajeClass}">${sesion.puntaje.toFixed(1)} / 5</td>
+                        <td>${tiempo} min</td>
+                        <td>${sesion.interacciones_ia} veces</td>
+                        <td><strong>${profesorNombre}</strong></td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('maquetaResultadosEst').innerHTML = html;
+            hideLoading();
+        }
+
+        // Cargar datos al iniciar
+        window.onload = refreshData;
+    </script>
+
+    <!-- Modal para ver mis maquetas (estudiante) -->
+    <div id="maquetaModalEstudiante" class="modal-maqueta">
+        <div class="modal-maqueta-content">
+            <div class="modal-maqueta-header">
+                <h2>📊 Mis Resultados por Maqueta</h2>
+                <button class="close-maqueta" onclick="cerrarModalMaquetaEstudiante()">&times;</button>
+            </div>
+            <div class="modal-maqueta-body">
+                <div class="maqueta-selector-est">
+                    <label for="maquetaSelectEst" style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">
+                        Selecciona una Maqueta:
+                    </label>
+                    <select id="maquetaSelectEst" onchange="filtrarMisMaquetas()" style="margin-bottom: 15px;">
+                        <option value="">Cargando...</option>
+                    </select>
+                    
+                    <label for="profesorSelectModal" style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">
+                        Filtrar por Profesor:
+                    </label>
+                    <select id="profesorSelectModal" onchange="filtrarMisMaquetas()" style="margin-bottom: 15px;">
+                        <option value="">Todos los profesores</option>
+                    </select>
+                </div>
+                <div id="maquetaResultadosEst">
+                    <div class="no-data">Selecciona una maqueta para ver tus resultados</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

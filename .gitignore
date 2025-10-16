@@ -1,0 +1,94 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Flask
+instance/
+.webassets-cache
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Backup files
+*_backup.py
+*.bak
+*.tmp
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Project specific
+app_backup.py
+test_*.py
+debug_*.py
+
+# Documentación temporal/debug (mantener solo README y ARQUITECTURA)
+BUGFIX_*.md
+RESUMEN_*.md
+CORRECCIONES_*.md
+DASHBOARD_ESTUDIANTE.md
+SOLUCION_*.md
+MEJORAS_*.md
+NUEVAS_*.md
+PRUEBAS_*.md
+CIRCULAR_*.md
+GUIA_*.md
+INICIO_RAPIDO*.md
+README_CORRECCIONES.md
+
+# Archivos de migración temporal
+migrate_*.py
+add_*.py
+
+# Scripts batch específicos
+setup_and_demo.bat
+run.bat
