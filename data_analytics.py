@@ -604,8 +604,24 @@ class AnalizadorAvanzado:
         
         estudiantes_stats.columns = ['_'.join(col).strip('_') for col in estudiantes_stats.columns.values]
         
-        if len(estudiantes_stats) < n_clusters:
-            n_clusters = max(2, len(estudiantes_stats) // 2)
+        # ✅ VALIDACIÓN: K-Means requiere al menos 2 muestras
+        num_estudiantes = len(estudiantes_stats)
+        
+        if num_estudiantes < 2:
+            # Con 1 estudiante, no podemos hacer clustering
+            return {
+                'clustering_disponible': False,
+                'razon': 'Se requieren al menos 2 estudiantes para clustering',
+                'num_estudiantes': num_estudiantes,
+                'clusters': [],
+                'silhouette_score': None,
+                'estudiantes_por_cluster': {},
+                'mensaje': f'Actualmente hay {num_estudiantes} estudiante(s). Se necesitan al menos 2 para análisis de clustering.'
+            }
+        
+        # Ajustar n_clusters según número de estudiantes
+        if num_estudiantes < n_clusters:
+            n_clusters = max(2, num_estudiantes // 2)
         
         # Features para clustering
         features = estudiantes_stats[['puntaje_mean', 'tiempo_minutos_mean', 'interacciones_ia_mean']].fillna(0)
