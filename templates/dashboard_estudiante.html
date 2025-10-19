@@ -966,9 +966,9 @@
                 
                 const stats = data.estadisticas || {};
                 document.getElementById('puntajePromedio').textContent = 
-                    (stats.puntaje_promedio || 0).toFixed(1) + ' / 5';
+                    (stats.puntaje_promedio || 0).toFixed(1) + ' / 7.0';
                 document.getElementById('mejorPuntaje').textContent = 
-                    (stats.puntaje_maximo || 0).toFixed(1) + ' / 5';
+                    (stats.puntaje_maximo || 0).toFixed(1) + ' / 7.0';
                 document.getElementById('tiempoPromedio').textContent = 
                     (stats.tiempo_promedio_minutos || 0).toFixed(1);
 
@@ -1057,7 +1057,7 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 5
+                            max: 7
                         }
                     }
                 }
@@ -1112,7 +1112,7 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 5
+                            max: 7
                         }
                     }
                 }
@@ -1142,8 +1142,8 @@
                     <div class="maqueta-header">🎮 ${stats.maqueta || 'Sin nombre'}</div>
                     <div class="maqueta-stats">
                         <div><strong>Sesiones:</strong> ${stats.sesiones || 0}</div>
-                        <div><strong>Promedio:</strong> ${(stats.puntaje_promedio || 0).toFixed(1)} / 5</div>
-                        <div><strong>Mejor:</strong> ${(stats.mejor || 0).toFixed(1)} / 5</div>
+                        <div><strong>Promedio:</strong> ${(stats.puntaje_promedio || 0).toFixed(1)} / 7.0</div>
+                        <div><strong>Mejor:</strong> ${(stats.mejor || 0).toFixed(1)} / 7.0</div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -1224,8 +1224,8 @@
                 
                 // Actualizar estadísticas con datos filtrados
                 document.getElementById('totalSesiones').textContent = data.total_sesiones;
-                document.getElementById('puntajePromedio').textContent = data.estadisticas.puntaje_promedio ? data.estadisticas.puntaje_promedio.toFixed(1) + ' / 5' : '0';
-                document.getElementById('mejorPuntaje').textContent = data.estadisticas.puntaje_maximo ? data.estadisticas.puntaje_maximo.toFixed(1) + ' / 5' : '0';
+                document.getElementById('puntajePromedio').textContent = data.estadisticas.puntaje_promedio ? data.estadisticas.puntaje_promedio.toFixed(1) + ' / 7.0' : '0';
+                document.getElementById('mejorPuntaje').textContent = data.estadisticas.puntaje_maximo ? data.estadisticas.puntaje_maximo.toFixed(1) + ' / 7.0' : '0';
                 document.getElementById('tiempoPromedio').textContent = data.estadisticas.tiempo_promedio_minutos ? data.estadisticas.tiempo_promedio_minutos.toFixed(1) : '0';
                 
                 // Actualizar insights
@@ -1472,15 +1472,15 @@
                     </div>
                     <div class="maqueta-stat-card-est">
                         <h4>PROMEDIO</h4>
-                        <div class="value">${promedioPuntaje} / 5</div>
+                        <div class="value">${promedioPuntaje} / 7.0</div>
                     </div>
                     <div class="maqueta-stat-card-est">
                         <h4>MEJOR PUNTAJE</h4>
-                        <div class="value">${mejorPuntaje} / 5</div>
+                        <div class="value">${mejorPuntaje} / 7.0</div>
                     </div>
                     <div class="maqueta-stat-card-est">
                         <h4>PEOR PUNTAJE</h4>
-                        <div class="value">${peorPuntaje} / 5</div>
+                        <div class="value">${peorPuntaje} / 7.0</div>
                     </div>
                     <div class="maqueta-stat-card-est">
                         <h4>TIEMPO PROMEDIO</h4>
@@ -1512,7 +1512,7 @@
                 html += `
                     <tr>
                         <td>${fecha}</td>
-                        <td class="${puntajeClass}">${sesion.puntaje.toFixed(1)} / 5</td>
+                        <td class="${puntajeClass}">${sesion.puntaje.toFixed(1)} / 7.0</td>
                         <td>${tiempo} min</td>
                         <td>${sesion.interacciones_ia} veces</td>
                         <td><strong>${profesorNombre}</strong></td>

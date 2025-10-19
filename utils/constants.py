@@ -11,7 +11,8 @@ MAX_CODIGO_LENGTH = 20
 
 # Límites de sesión
 MIN_PUNTAJE = 0.0
-MAX_PUNTAJE = 5.0
+MAX_PUNTAJE = 7.0
+PUNTAJE_APROBACION = 4.0  # Puntaje mínimo para aprobar
 MAX_TIEMPO_SEGUNDOS = 7200  # 2 horas
 MAX_INTERACCIONES_IA = 1000
 

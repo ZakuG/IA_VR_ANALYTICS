@@ -35,7 +35,7 @@ class SessionService:
         Args:
             estudiante_codigo: Código del estudiante
             maqueta: Nombre de la maqueta
-            puntaje: Puntaje obtenido (0-5)
+            puntaje: Puntaje obtenido (0-7)
             tiempo_segundos: Tiempo en segundos
             interacciones_ia: Interacciones con IA
             profesor_email: Email del profesor (opcional)
@@ -162,8 +162,8 @@ class SessionService:
         """
         errores = []
         
-        if not 0 <= puntaje <= 5:
-            errores.append("El puntaje debe estar entre 0 y 5")
+        if not 0 <= puntaje <= 7:
+            errores.append("El puntaje debe estar entre 0 y 7")
         
         if tiempo_segundos < 0:
             errores.append("El tiempo no puede ser negativo")

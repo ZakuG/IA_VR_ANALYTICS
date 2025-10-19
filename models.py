@@ -191,8 +191,8 @@ class Sesion(db.Model):
     
     @property
     def aprobado(self) -> bool:
-        """Indica si la sesión está aprobada (puntaje >= 3)"""
-        return self.puntaje >= 3
+        """Indica si la sesión está aprobada (puntaje >= 4)"""
+        return self.puntaje >= 4
     
     @property
     def tiempo_minutos(self) -> float:
@@ -201,14 +201,14 @@ class Sesion(db.Model):
     
     @property
     def calificacion(self) -> str:
-        """Calificación textual basada en puntaje"""
-        if self.puntaje >= 4.5:
+        """Calificación textual basada en puntaje (escala 0-7)"""
+        if self.puntaje >= 6.5:
             return "Excelente"
-        elif self.puntaje >= 4.0:
+        elif self.puntaje >= 5.5:
             return "Muy Bueno"
-        elif self.puntaje >= 3.0:
+        elif self.puntaje >= 4.0:
             return "Bueno"
-        elif self.puntaje >= 2.0:
+        elif self.puntaje >= 3.0:
             return "Regular"
         else:
             return "Insuficiente"
@@ -216,9 +216,9 @@ class Sesion(db.Model):
     @property
     def eficiencia(self) -> str:
         """Eficiencia basada en tiempo y puntaje"""
-        if self.puntaje >= 4 and self.tiempo_segundos < 300:
+        if self.puntaje >= 5.5 and self.tiempo_segundos < 300:
             return "Alta"
-        elif self.puntaje >= 3 and self.tiempo_segundos < 600:
+        elif self.puntaje >= 4 and self.tiempo_segundos < 600:
             return "Media"
         else:
             return "Baja"

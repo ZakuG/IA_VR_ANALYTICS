@@ -22,7 +22,7 @@ class SessionRepository:
         Args:
             estudiante_id: ID del estudiante
             maqueta: Nombre de la maqueta VR
-            puntaje: Puntaje obtenido (0-5)
+            puntaje: Puntaje obtenido (0-7)
             tiempo_segundos: Tiempo en segundos
             interacciones_ia: Número de interacciones con IA
             profesor_id: ID del profesor que evalúa (opcional)
@@ -33,8 +33,8 @@ class SessionRepository:
         Raises:
             ValueError: Si los datos son inválidos
         """
-        if not 0 <= puntaje <= 5:
-            raise ValueError("El puntaje debe estar entre 0 y 5")
+        if not 0 <= puntaje <= 7:
+            raise ValueError("El puntaje debe estar entre 0 y 7")
         
         if tiempo_segundos < 0:
             raise ValueError("El tiempo no puede ser negativo")

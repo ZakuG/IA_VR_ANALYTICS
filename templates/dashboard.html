@@ -34,6 +34,10 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .header-buttons {
@@ -97,6 +101,10 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .stat-card h3 {
@@ -129,6 +137,10 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
         
         .chart-card canvas {
@@ -150,6 +162,10 @@
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             overflow-x: auto;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         table {
@@ -232,6 +248,10 @@
             overflow: hidden;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             animation: slideDown 0.3s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         @keyframes slideDown {
@@ -298,6 +318,10 @@
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .maqueta-stat-card {
@@ -520,6 +544,10 @@
             width: 90%;
             transform: scale(0.7);
             transition: transform 0.3s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .confirm-modal.active .confirm-modal-content {
@@ -689,7 +717,7 @@
                 <div class="stat-card">
                     <h3>PROMEDIO PUNTAJE</h3>
                     <div class="value" id="promedio-puntaje">0</div>
-                    <div class="label">sobre 5 puntos</div>
+                    <div class="label">sobre 7 puntos</div>
                 </div>
                 <div class="stat-card">
                     <h3>TASA DE APROBACIÓN</h3>
@@ -942,7 +970,7 @@
                                     <h3 style="color: #667eea; margin-bottom: 15px;">Para comenzar:</h3>
                                     <ol style="text-align: left; display: inline-block;">
                                         <li style="margin: 10px 0;">Genera datos de prueba ejecutando: <code style="background: #e9ecef; padding: 5px 10px; border-radius: 3px;">python generate_test_data.py</code></li>
-                                        <li style="margin: 10px 0;">O conecta tu aplicación Unity para enviar datos reales</li>
+                                        <li style="margin: 10px 0;">O ingresa manualmente los datos</li>
                                         <li style="margin: 10px 0;">Luego recarga esta página</li>
                                     </ol>
                                 </div>
@@ -1268,7 +1296,7 @@
                                 </div>
                                 <div>
                                     <div style="color: #666;">Promedio:</div>
-                                    <div style="font-weight: bold; font-size: 18px; color: ${cluster.color};">${cluster.promedio_puntaje} / 5</div>
+                                    <div style="font-weight: bold; font-size: 18px; color: ${cluster.color};">${cluster.promedio_puntaje} / 7.0</div>
                                 </div>
                                 <div>
                                     <div style="color: #666;">Tiempo:</div>
@@ -1460,7 +1488,7 @@
                     scales: {
                         r: {
                             beginAtZero: true,
-                            max: 5,
+                            max: 7,
                             ticks: { stepSize: 1 }
                         }
                     }
@@ -1503,7 +1531,7 @@
                         y: {
                             title: { display: true, text: 'Puntaje' },
                             beginAtZero: true,
-                            max: 5,
+                            max: 7,
                             ticks: { stepSize: 1 }
                         }
                     }
@@ -1533,7 +1561,7 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 5,
+                            max: 7,
                             ticks: { stepSize: 1 }
                         }
                     }

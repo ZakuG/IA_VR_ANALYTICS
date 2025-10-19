@@ -69,7 +69,7 @@ class AnalizadorAvanzado:
         if self.df.empty:
             return {}
         
-        tasa_aprob = (self.df['puntaje'] >= 3).sum() / len(self.df) * 100
+        tasa_aprob = (self.df['puntaje'] >= 4).sum() / len(self.df) * 100
         
         stats_dict = {
             'general': {
@@ -105,7 +105,7 @@ class AnalizadorAvanzado:
         for maqueta in self.df['maqueta'].unique():
             df_maqueta = self.df[self.df['maqueta'] == maqueta]
             
-            tasa_aprob = (df_maqueta['puntaje'] >= 3).sum() / len(df_maqueta) * 100
+            tasa_aprob = (df_maqueta['puntaje'] >= 4).sum() / len(df_maqueta) * 100
             
             maquetas[str(maqueta)] = {
                 'total_intentos': int(len(df_maqueta)),
@@ -270,11 +270,11 @@ class AnalizadorAvanzado:
         puntaje_medio = cluster_data['puntaje'].mean()
         tiempo_medio = cluster_data['tiempo_minutos'].mean()
         
-        if puntaje_medio >= 4:
+        if puntaje_medio >= 5.5:
             return "Estudiantes Destacados"
-        elif puntaje_medio >= 3 and tiempo_medio < self.df['tiempo_minutos'].median():
+        elif puntaje_medio >= 4 and tiempo_medio < self.df['tiempo_minutos'].median():
             return "Estudiantes Eficientes"
-        elif puntaje_medio >= 3:
+        elif puntaje_medio >= 4:
             return "Estudiantes Regulares"
         else:
             return "Estudiantes en Riesgo"
@@ -327,7 +327,7 @@ class AnalizadorAvanzado:
         
         return ". ".join(interpretaciones) + f". (R² = {round(r2, 2)})"
     
-    def estudiantes_en_riesgo(self, threshold_puntaje=3):
+    def estudiantes_en_riesgo(self, threshold_puntaje=4):
         """Identifica estudiantes que necesitan atención"""
         if self.df.empty:
             return []
@@ -386,8 +386,8 @@ class AnalizadorAvanzado:
         # Fórmula ponderada
         ranking['puntuacion_final'] = (
             ranking['puntaje'] * 0.6 +  # 60% puntaje
-            ranking['tiempo_normalizado'] * 5 * 0.3 +  # 30% eficiencia de tiempo
-            (ranking['interacciones_ia'] / ranking['interacciones_ia'].max() * 5 * 0.1)  # 10% uso de IA
+            ranking['tiempo_normalizado'] * 7 * 0.3 +  # 30% eficiencia de tiempo
+            (ranking['interacciones_ia'] / ranking['interacciones_ia'].max() * 7 * 0.1)  # 10% uso de IA
         )
         
         # Ordenar
@@ -408,7 +408,7 @@ class AnalizadorAvanzado:
         insights = []
         
         # Análisis de tasa de aprobación
-        tasa_aprobacion = (self.df['puntaje'] >= 3).sum() / len(self.df) * 100
+        tasa_aprobacion = (self.df['puntaje'] >= 4).sum() / len(self.df) * 100
         if tasa_aprobacion < 50:
             insights.append({
                 'tipo': 'critico',
@@ -490,7 +490,7 @@ class AnalizadorAvanzado:
     
     def clasificacion_binaria_aprobacion(self):
         """
-        Clasificación binaria: Predice si un estudiante aprobará (puntaje >= 3)
+        Clasificación binaria: Predice si un estudiante aprobará (puntaje >= 4)
         Usa Logistic Regression y Random Forest
         """
         if self.df.empty or len(self.df) < 10:
@@ -504,8 +504,8 @@ class AnalizadorAvanzado:
         X['tiempo_minutos'] = X['tiempo_segundos'] / 60
         X = X[['tiempo_minutos', 'interacciones_ia']]
         
-        # Target: 1 = Aprobado (>=3), 0 = Reprobado (<3)
-        y = (self.df['puntaje'] >= 3).astype(int)
+        # Target: 1 = Aprobado (>=4), 0 = Reprobado (<4)
+        y = (self.df['puntaje'] >= 4).astype(int)
         
         # Si todos son de la misma clase, no se puede clasificar
         if y.nunique() == 1:
@@ -648,15 +648,15 @@ class AnalizadorAvanzado:
             promedio_ia = float(cluster_data['interacciones_ia_mean'].mean())
             
             # Clasificar cluster
-            if promedio_puntaje >= 4:
+            if promedio_puntaje >= 5.5:
                 nivel = 'Excelente'
                 color = '#28a745'
                 icono = '🌟'
-            elif promedio_puntaje >= 3:
+            elif promedio_puntaje >= 4:
                 nivel = 'Bueno'
                 color = '#17a2b8'
                 icono = '✅'
-            elif promedio_puntaje >= 2:
+            elif promedio_puntaje >= 3:
                 nivel = 'Regular'
                 color = '#ffc107'
                 icono = '⚠️'
@@ -683,7 +683,7 @@ class AnalizadorAvanzado:
                 'promedio_tiempo_min': round(promedio_tiempo, 2),
                 'promedio_uso_ia': round(promedio_ia, 2),
                 'caracteristicas': caracteristicas if caracteristicas else ['Sin características distintivas'],
-                'descripcion': f"{icono} {nivel}: {len(cluster_data)} estudiantes con promedio de {promedio_puntaje:.1f}/5"
+                'descripcion': f"{icono} {nivel}: {len(cluster_data)} estudiantes con promedio de {promedio_puntaje:.1f}/7"
             }
         
         # Calcular inercia (calidad del clustering)
@@ -713,12 +713,12 @@ class AnalizadorAvanzado:
         peor = clusters_ordenados[-1]
         
         interpretaciones.append(
-            f"🏆 {mejor[0]} tiene el mejor rendimiento con {mejor[1]['promedio_puntaje']}/5"
+            f"🏆 {mejor[0]} tiene el mejor rendimiento con {mejor[1]['promedio_puntaje']}/7"
         )
         
-        if peor[1]['promedio_puntaje'] < 3:
+        if peor[1]['promedio_puntaje'] < 4:
             interpretaciones.append(
-                f"📢 {peor[0]} necesita atención: {peor[1]['total_estudiantes']} estudiantes con promedio {peor[1]['promedio_puntaje']}/5"
+                f"📢 {peor[0]} necesita atención: {peor[1]['total_estudiantes']} estudiantes con promedio {peor[1]['promedio_puntaje']}/7"
             )
         
         # Identificar patrones
