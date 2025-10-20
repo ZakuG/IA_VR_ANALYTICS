@@ -25,7 +25,7 @@ def agregar_segundo_profesor():
         db.session.commit()
         
         # Obtener algunos estudiantes existentes (primeros 5)
-        estudiantes = Estudiante.query.limit(5).all()
+        estudiantes = Estudiante.query.limit(15).all()
         
         print(f"Inscribiendo {len(estudiantes)} estudiantes con el segundo profesor...")
         
@@ -41,37 +41,59 @@ def agregar_segundo_profesor():
         maquetas = ["Aire acondicionado", "Motor"]
         sesiones_generadas = 0
         
-        for estudiante in estudiantes:
-            # 2-4 sesiones por estudiante con este profesor
-            num_sesiones = random.randint(2, 4)
+        # Dividir estudiantes en 3 grupos para variedad
+        tercio = len(estudiantes) // 3
+        estudiantes_bajo = estudiantes[:tercio]
+        estudiantes_medio = estudiantes[tercio:tercio*2]
+        estudiantes_alto = estudiantes[tercio*2:]
+        
+        def generar_sesion_profesor2(estudiante, grupo_rendimiento):
+            """Genera sesión con rendimiento según grupo"""
+            maqueta = random.choice(maquetas)
             
-            for _ in range(num_sesiones):
-                maqueta = random.choice(maquetas)
-                nivel_estudiante = random.uniform(0, 1)
-                
-                tiempo_base = 120 - (nivel_estudiante * 60)
-                tiempo_segundos = int(max(30, min(120, random.gauss(tiempo_base, 20))))
-                
-                puntaje_esperado = nivel_estudiante * 5
-                puntaje = int(max(0, min(5, random.gauss(puntaje_esperado, 1))))
-                
-                ia_base = (1 - nivel_estudiante) * 10
-                interacciones_ia = int(max(0, random.gauss(ia_base, 3)))
-                
-                fecha = datetime.utcnow() - timedelta(days=random.randint(0, 15))
-                
-                sesion = Sesion(
-                    estudiante_id=estudiante.id,
-                    profesor_id=profesor2.id,  # Sesión del segundo profesor
-                    maqueta=maqueta,
-                    tiempo_segundos=tiempo_segundos,
-                    puntaje=puntaje,
-                    fecha=fecha,
-                    interacciones_ia=interacciones_ia,
-                    respuestas_detalle='{"respuestas": []}'
-                )
-                
-                db.session.add(sesion)
+            if grupo_rendimiento == 'bajo':
+                puntaje_base = random.uniform(0, 3.9)
+                tiempo_base = random.uniform(90, 120)
+                ia_base = random.uniform(8, 15)
+            elif grupo_rendimiento == 'medio':
+                puntaje_base = random.uniform(4.0, 5.5)
+                tiempo_base = random.uniform(60, 90)
+                ia_base = random.uniform(3, 8)
+            else:  # 'alto'
+                puntaje_base = random.uniform(5.5, 7.0)
+                tiempo_base = random.uniform(30, 60)
+                ia_base = random.uniform(0, 3)
+            
+            puntaje = int(round(max(0, min(7, random.gauss(puntaje_base, 0.5)))))
+            tiempo_segundos = int(max(30, min(120, random.gauss(tiempo_base, 10))))
+            interacciones_ia = int(max(0, random.gauss(ia_base, 2)))
+            fecha = datetime.utcnow() - timedelta(days=random.randint(0, 15))
+            
+            return Sesion(
+                estudiante_id=estudiante.id,
+                profesor_id=profesor2.id,
+                maqueta=maqueta,
+                tiempo_segundos=tiempo_segundos,
+                puntaje=puntaje,
+                fecha=fecha,
+                interacciones_ia=interacciones_ia,
+                respuestas_detalle='{"respuestas": []}'
+            )
+        
+        # Generar sesiones por grupo
+        for estudiante in estudiantes_bajo:
+            for _ in range(random.randint(2, 4)):
+                db.session.add(generar_sesion_profesor2(estudiante, 'bajo'))
+                sesiones_generadas += 1
+        
+        for estudiante in estudiantes_medio:
+            for _ in range(random.randint(2, 4)):
+                db.session.add(generar_sesion_profesor2(estudiante, 'medio'))
+                sesiones_generadas += 1
+        
+        for estudiante in estudiantes_alto:
+            for _ in range(random.randint(2, 4)):
+                db.session.add(generar_sesion_profesor2(estudiante, 'alto'))
                 sesiones_generadas += 1
         
         db.session.commit()

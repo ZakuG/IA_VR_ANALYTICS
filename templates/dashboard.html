@@ -717,17 +717,17 @@
                 <div class="stat-card">
                     <h3>PROMEDIO PUNTAJE</h3>
                     <div class="value" id="promedio-puntaje">0</div>
-                    <div class="label">sobre 7 puntos</div>
+                    <div class="label">sobre 7.0 puntos</div>
                 </div>
                 <div class="stat-card">
                     <h3>TASA DE APROBACIÓN</h3>
                     <div class="value" id="tasa-aprobacion">0%</div>
-                    <div class="label">estudiantes con ≥ 3 pts</div>
+                    <div class="label">estudiantes con ≥ 4.0 pts</div>
                 </div>
                 <div class="stat-card">
                     <h3>TIEMPO PROMEDIO</h3>
                     <div class="value" id="tiempo-promedio">0</div>
-                    <div class="label">minutos</div>
+                    <div class="label">segundos</div>
                 </div>
                 <div class="stat-card">
                     <h3>TOTAL ESTUDIANTES</h3>
@@ -1020,7 +1020,7 @@
             document.getElementById('total-estudiantes').textContent = stats.total_estudiantes || 0;
             document.getElementById('promedio-puntaje').textContent = stats.promedio_puntaje || 0;
             document.getElementById('tasa-aprobacion').textContent = (stats.tasa_aprobacion || 0) + '%';
-            document.getElementById('tiempo-promedio').textContent = stats.promedio_tiempo_min ? stats.promedio_tiempo_min.toFixed(2) : '0.00';
+            document.getElementById('tiempo-promedio').textContent = stats.promedio_tiempo_segundos ? stats.promedio_tiempo_segundos.toFixed(0) : '0';
             document.getElementById('desviacion-puntaje').textContent = stats.desviacion_puntaje || 0;
 
             // Mostrar insights
@@ -1147,7 +1147,7 @@
                         <h4 style="color: ${color}; margin-bottom: 10px;">${cluster.nombre}</h4>
                         <p><strong>Estudiantes:</strong> ${cluster.cantidad}</p>
                         <p><strong>Puntaje promedio:</strong> ${cluster.promedio_puntaje}</p>
-                        <p><strong>Tiempo promedio:</strong> ${cluster.promedio_tiempo_min.toFixed(2)} min</p>
+                        <p><strong>Tiempo promedio:</strong> ${cluster.promedio_tiempo_segundos.toFixed(0)} seg</p>
                         <p><strong>Uso de IA:</strong> ${cluster.promedio_ia.toFixed(1)} interacciones</p>
                         <details style="margin-top: 10px;">
                             <summary style="cursor: pointer; color: ${color};">Ver estudiantes</summary>
@@ -1199,13 +1199,13 @@
                     <div style="background: #17a2b8; color: white; padding: 20px; border-radius: 10px; text-align: center;">
                         <div style="font-size: 14px; opacity: 0.9;">Aprobados</div>
                         <div style="font-size: 36px; font-weight: bold; margin: 10px 0;">${ml_data.aprobados}</div>
-                        <div style="font-size: 12px;">✅ Puntaje ≥ 3</div>
+                        <div style="font-size: 12px;">✅ Puntaje ≥ 4.0</div>
                     </div>
                     
                     <div style="background: #dc3545; color: white; padding: 20px; border-radius: 10px; text-align: center;">
                         <div style="font-size: 14px; opacity: 0.9;">Reprobados</div>
                         <div style="font-size: 36px; font-weight: bold; margin: 10px 0;">${ml_data.reprobados}</div>
-                        <div style="font-size: 12px;">❌ Puntaje < 3</div>
+                        <div style="font-size: 12px;">❌ Puntaje < 4.0</div>
                     </div>
                 </div>
                 
@@ -1213,11 +1213,11 @@
                     <h4 style="color: #667eea; margin-bottom: 15px;">📈 Importancia de Características (Random Forest)</h4>
                     <div style="margin-bottom: 10px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>⏱️ Tiempo (minutos)</span>
-                            <span><strong>${(ml_data.random_forest.feature_importance.tiempo_minutos * 100).toFixed(1)}%</strong></span>
+                            <span>⏱️ Tiempo (segundos)</span>
+                            <span><strong>${(ml_data.random_forest.feature_importance.tiempo_segundos * 100).toFixed(1)}%</strong></span>
                         </div>
                         <div style="background: #e9ecef; border-radius: 5px; overflow: hidden;">
-                            <div style="background: linear-gradient(90deg, #667eea, #764ba2); height: 25px; width: ${ml_data.random_forest.feature_importance.tiempo_minutos * 100}%;"></div>
+                            <div style="background: linear-gradient(90deg, #667eea, #764ba2); height: 25px; width: ${ml_data.random_forest.feature_importance.tiempo_segundos * 100}%;"></div>
                         </div>
                     </div>
                     <div>
@@ -1300,7 +1300,7 @@
                                 </div>
                                 <div>
                                     <div style="color: #666;">Tiempo:</div>
-                                    <div style="font-weight: bold; color: #333;">${cluster.promedio_tiempo_min.toFixed(1)} min</div>
+                                    <div style="font-weight: bold; color: #333;">${cluster.promedio_tiempo_segundos.toFixed(0)} seg</div>
                                 </div>
                                 <div>
                                     <div style="color: #666;">Uso IA:</div>
@@ -1462,34 +1462,76 @@
                 }
             });
 
-            // Gráfico por maqueta
+            // Gráfico por maqueta - Barras horizontales para mejor visualización
             const ctx2 = document.getElementById('maquetasChart').getContext('2d');
             if (maquetasChart) maquetasChart.destroy();
 
             const maquetas = Object.keys(viz.puntajes_por_maqueta);
             const puntajes_maqueta = Object.values(viz.puntajes_por_maqueta);
 
+            // Colores degradados para cada maqueta
+            const coloresMaquetas = puntajes_maqueta.map(puntaje => {
+                if (puntaje >= 5.5) return 'rgba(40, 167, 69, 0.8)';  // Verde
+                else if (puntaje >= 4) return 'rgba(23, 162, 184, 0.8)';  // Azul
+                else return 'rgba(220, 53, 69, 0.8)';  // Rojo
+            });
+
             maquetasChart = new Chart(ctx2, {
-                type: 'radar',
+                type: 'bar',
                 data: {
                     labels: maquetas,
                     datasets: [{
                         label: 'Promedio de Puntaje',
                         data: puntajes_maqueta,
-                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                        borderColor: 'rgba(102, 126, 234, 1)',
+                        backgroundColor: coloresMaquetas,
+                        borderColor: coloresMaquetas.map(c => c.replace('0.8', '1')),
                         borderWidth: 2,
-                        pointBackgroundColor: 'rgba(102, 126, 234, 1)'
+                        borderRadius: 8,
+                        barPercentage: 0.7
                     }]
                 },
                 options: {
+                    indexAxis: 'y',  // Barras horizontales
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Puntaje: ${context.parsed.x.toFixed(2)} / 7`;
+                                }
+                            }
+                        }
+                    },
                     scales: {
-                        r: {
+                        x: {
                             beginAtZero: true,
                             max: 7,
-                            ticks: { stepSize: 1 }
+                            ticks: { 
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return value;
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Puntaje Promedio (0-7)',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
                         }
                     }
                 }
@@ -1525,7 +1567,7 @@
                     maintainAspectRatio: false,
                     scales: {
                         x: {
-                            title: { display: true, text: 'Tiempo (minutos)' },
+                            title: { display: true, text: 'Tiempo (segundos)' },
                             beginAtZero: true
                         },
                         y: {
@@ -1583,7 +1625,7 @@
                 row.innerHTML = `
                     <td>${student.estudiante_nombre}</td>
                     <td class="risk">${student.puntaje_mean ? student.puntaje_mean.toFixed(2) : 'N/A'}</td>
-                    <td>${student.tiempo_mean ? student.tiempo_mean.toFixed(2) : 'N/A'} min</td>
+                    <td>${student.tiempo_mean ? student.tiempo_mean.toFixed(0) : 'N/A'} seg</td>
                     <td class="risk">⚠️ ${student.motivo_riesgo || 'Requiere atención'}</td>
                 `;
             });
@@ -1606,7 +1648,7 @@
                     <td>${medal} ${index + 1}</td>
                     <td>${student.estudiante_nombre}</td>
                     <td class="good">${student.puntaje.toFixed(2)}</td>
-                    <td>${student.tiempo_minutos.toFixed(2)} min</td>
+                    <td>${student.tiempo_segundos.toFixed(0)} seg</td>
                     <td class="good">${student.puntuacion_final.toFixed(2)}</td>
                 `;
             });
@@ -1688,10 +1730,10 @@
             // Calcular estadísticas
             const totalSesiones = sesionesFiltradas.length;
             const puntajes = sesionesFiltradas.map(s => s.puntaje);
-            const tiempos = sesionesFiltradas.map(s => s.tiempo_segundos / 60); // en minutos
+            const tiempos = sesionesFiltradas.map(s => s.tiempo_segundos); // en segundos
             
             const promedioPuntaje = (puntajes.reduce((a, b) => a + b, 0) / totalSesiones).toFixed(2);
-            const promedioTiempo = (tiempos.reduce((a, b) => a + b, 0) / totalSesiones).toFixed(2);
+            const promedioTiempo = (tiempos.reduce((a, b) => a + b, 0) / totalSesiones).toFixed(0);
             const mejorPuntaje = Math.max(...puntajes).toFixed(2);
             const peorPuntaje = Math.min(...puntajes).toFixed(2);
 
@@ -1723,7 +1765,7 @@
                     </div>
                     <div class="maqueta-stat-card">
                         <h4>TIEMPO PROMEDIO</h4>
-                        <div class="value">${promedioTiempo} min</div>
+                        <div class="value">${promedioTiempo} seg</div>
                     </div>
                 </div>
 
@@ -1744,15 +1786,15 @@
 
             sesionesFiltradas.forEach(sesion => {
                 const fecha = new Date(sesion.fecha).toLocaleDateString('es-ES');
-                const tiempo = (sesion.tiempo_segundos / 60).toFixed(2);
-                const puntajeClass = sesion.puntaje >= 3 ? 'good' : 'risk';
+                const tiempo = sesion.tiempo_segundos;
+                const puntajeClass = sesion.puntaje >= 4 ? 'good' : 'risk';
                 
                 html += `
                     <tr>
                         <td>${fecha}</td>
                         <td>${sesion.estudiante_nombre}</td>
                         <td class="${puntajeClass}">${sesion.puntaje.toFixed(2)}</td>
-                        <td>${tiempo} min</td>
+                        <td>${tiempo} seg</td>
                         <td>${sesion.interacciones_ia} veces</td>
                     </tr>
                 `;

@@ -74,9 +74,9 @@ Sonet_Version/
     └── dashboard.html     # Dashboard principal con análisis
 ```
 
-## 🔌 API para Unity
+## 🔌 API
 
-### Endpoint para registrar sesiones desde Unity
+### Endpoint para registrar sesiones
 
 **POST** `/api/unity/session`
 
@@ -99,61 +99,6 @@ Sonet_Version/
 {
   "success": true,
   "session_id": 123
-}
-```
-
-### Ejemplo de código C# para Unity
-
-```csharp
-using UnityEngine;
-using UnityEngine.Networking;
-using System.Collections;
-
-[System.Serializable]
-public class SessionData
-{
-    public string codigo_estudiante;
-    public string maqueta;
-    public int tiempo_segundos;
-    public int puntaje;
-    public int interacciones_ia;
-}
-
-public class VRAnalyticsIntegration : MonoBehaviour
-{
-    private string apiUrl = "http://localhost:5000/api/unity/session";
-
-    public IEnumerator EnviarResultados(string codigoEstudiante, string maqueta, 
-                                       int tiempoSegundos, int puntaje, int interaccionesIA)
-    {
-        SessionData data = new SessionData
-        {
-            codigo_estudiante = codigoEstudiante,
-            maqueta = maqueta,
-            tiempo_segundos = tiempoSegundos,
-            puntaje = puntaje,
-            interacciones_ia = interaccionesIA
-        };
-
-        string jsonData = JsonUtility.ToJson(data);
-        
-        UnityWebRequest request = new UnityWebRequest(apiUrl, "POST");
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-
-        yield return request.SendWebRequest();
-
-        if (request.result == UnityWebRequest.Result.Success)
-        {
-            Debug.Log("Resultados enviados correctamente");
-        }
-        else
-        {
-            Debug.LogError("Error: " + request.error);
-        }
-    }
 }
 ```
 
@@ -211,16 +156,6 @@ El sistema genera automáticamente recomendaciones como:
 - **Visualización**: Chart.js
 - **Base de Datos**: SQLite
 
-## 📈 Mejoras Futuras Sugeridas
-
-1. **Exportación de reportes** en PDF/Excel
-2. **Comparación entre grupos** de estudiantes
-3. **Notificaciones por email** para estudiantes en riesgo
-4. **Análisis de sentimiento** de interacciones con IA
-5. **Dashboard en tiempo real** con WebSockets
-6. **Más algoritmos de ML** (Random Forest, SVM, etc.)
-7. **Análisis de secuencias** de aprendizaje
-
 ## 👥 Gestión de Estudiantes
 
 Los profesores pueden:
@@ -228,23 +163,6 @@ Los profesores pueden:
 - Ver historial completo de cada estudiante
 - Identificar estudiantes que necesitan atención
 - Ver rankings de rendimiento
-
-## 📝 Notas para tu Profesora
-
-Este sistema implementa múltiples técnicas de **Data Science**:
-
-1. **Análisis Exploratorio de Datos (EDA)**: Estadísticas descriptivas completas
-2. **Inferencia Estadística**: Tests de correlación de Pearson con p-values
-3. **Machine Learning Supervisado**: Regresión lineal para predicción
-4. **Machine Learning No Supervisado**: K-Means clustering
-5. **Visualización de Datos**: Múltiples tipos de gráficos interactivos
-6. **Feature Engineering**: Normalización y transformación de datos
-7. **Interpretación de Resultados**: Insights automáticos y recomendaciones
-
-Los datos se correlacionan de manera realista:
-- Estudiantes más rápidos tienden a tener mejores puntajes (si conocen el tema)
-- Más interacciones con IA pueden indicar dificultad o interés
-- El tiempo excesivo puede indicar confusión o dedicación
 
 ## 🆘 Soporte
 

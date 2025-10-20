@@ -248,5 +248,6 @@ class AuthService:
             'id': p.id,
             'nombre': p.nombre,
             'email': p.email,
+            'institucion': p.institucion,
             'total_estudiantes': p.estudiantes.count()  # Usar .count() en lugar de len()
         } for p in profesores]

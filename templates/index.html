@@ -9,6 +9,18 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* Permitir selección en inputs y elementos interactivos */
+        input, textarea, select, button, [contenteditable="true"] {
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
         }
 
         body {
@@ -114,7 +126,7 @@
             </div>
             <div class="feature">
                 <h3>📈 Reportes Detallados</h3>
-                <p>Exporta datos en PDF y Excel</p>
+                <p>Visualiza datos de tus estudiantes o sesiones</p>
             </div>
             <div class="feature">
                 <h3>🤖 IA Integrada</h3>

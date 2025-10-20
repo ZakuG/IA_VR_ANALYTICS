@@ -10,6 +10,18 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* Permitir selección en inputs y elementos interactivos */
+        input, textarea, select, button, [contenteditable="true"] {
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
         }
 
         body {
@@ -779,7 +791,7 @@
                 <div class="stat-card">
                     <div class="stat-label">Tiempo Promedio</div>
                     <div class="stat-value" id="tiempoPromedio">0</div>
-                    <div class="stat-label">minutos</div>
+                    <div class="stat-label">segundos</div>
                 </div>
             </div>
 
@@ -970,7 +982,7 @@
                 document.getElementById('mejorPuntaje').textContent = 
                     (stats.puntaje_maximo || 0).toFixed(1) + ' / 7.0';
                 document.getElementById('tiempoPromedio').textContent = 
-                    (stats.tiempo_promedio_minutos || 0).toFixed(1);
+                    (stats.tiempo_promedio_segundos || 0).toFixed(0);
 
                 // Insights
                 const insightsList = document.getElementById('insightsList');
@@ -1012,52 +1024,117 @@
             }
         }
 
-        // Gráfico de progreso temporal
-        function updateProgresoChart(progreso) {
+        // Gráfico de progreso temporal por maqueta
+        function updateProgresoChart(progresoData) {
             const ctx = document.getElementById('progresoChart').getContext('2d');
             
             if (progresoChart) {
                 progresoChart.destroy();
             }
 
-            // Validar y transformar datos
-            let labels, data;
-            
-            if (!progreso || !Array.isArray(progreso) || progreso.length === 0) {
+            // Validar si hay datos
+            if (!progresoData || typeof progresoData !== 'object' || Object.keys(progresoData).length === 0) {
                 // Sin datos
-                labels = ['Sin datos'];
-                data = [0];
-            } else {
-                // progreso es un array de {sesion, puntaje, fecha}
-                labels = progreso.map(p => p.fecha || 'N/A');
-                data = progreso.map(p => p.puntaje || 0);
+                progresoChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Sin datos'],
+                        datasets: [{
+                            label: 'Sin datos',
+                            data: [0],
+                            borderColor: '#ccc',
+                            backgroundColor: 'rgba(200, 200, 200, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: true } },
+                        scales: { y: { beginAtZero: true, max: 7 } }
+                    }
+                });
+                return;
             }
+
+            // progresoData es un objeto: { 'Maqueta1': [{puntaje, fecha, fecha_completa}, ...], 'Maqueta2': [...] }
+            const maquetas = Object.keys(progresoData);
+            
+            // Colores para cada maqueta
+            const colores = [
+                { border: 'rgba(102, 126, 234, 1)', bg: 'rgba(102, 126, 234, 0.1)' },    // Azul
+                { border: 'rgba(244, 67, 54, 1)', bg: 'rgba(244, 67, 54, 0.1)' },        // Rojo
+                { border: 'rgba(76, 175, 80, 1)', bg: 'rgba(76, 175, 80, 0.1)' },        // Verde
+                { border: 'rgba(255, 152, 0, 1)', bg: 'rgba(255, 152, 0, 0.1)' },        // Naranja
+                { border: 'rgba(156, 39, 176, 1)', bg: 'rgba(156, 39, 176, 0.1)' },      // Morado
+                { border: 'rgba(0, 188, 212, 1)', bg: 'rgba(0, 188, 212, 0.1)' }         // Cyan
+            ];
+
+            // Recopilar todas las fechas únicas y ordenarlas
+            const todasFechas = new Set();
+            Object.values(progresoData).forEach(sesiones => {
+                sesiones.forEach(s => todasFechas.add(s.fecha_completa));
+            });
+            const fechasOrdenadas = Array.from(todasFechas).sort();
+            const labels = fechasOrdenadas.map(f => {
+                const [y, m, d] = f.split('-');
+                return `${d}/${m}`;
+            });
+
+            // Crear datasets (una línea por maqueta)
+            const datasets = maquetas.map((maqueta, index) => {
+                const sesiones = progresoData[maqueta];
+                const colorIndex = index % colores.length;
+                
+                // Mapear puntajes a fechas correspondientes
+                const data = fechasOrdenadas.map(fecha => {
+                    const sesion = sesiones.find(s => s.fecha_completa === fecha);
+                    return sesion ? sesion.puntaje : null;
+                });
+
+                return {
+                    label: maqueta,
+                    data: data,
+                    borderColor: colores[colorIndex].border,
+                    backgroundColor: colores[colorIndex].bg,
+                    tension: 0.4,
+                    fill: true,
+                    spanGaps: true  // Conectar puntos aunque haya nulls
+                };
+            });
 
             progresoChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Puntaje',
-                        data: data,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: false
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    const maqueta = context.dataset.label;
+                                    const puntaje = context.parsed.y;
+                                    if (puntaje === null) return null;
+                                    return `${maqueta}: ${puntaje} / 7`;
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 7
+                            max: 7,
+                            ticks: { stepSize: 1 }
                         }
                     }
                 }
@@ -1226,7 +1303,7 @@
                 document.getElementById('totalSesiones').textContent = data.total_sesiones;
                 document.getElementById('puntajePromedio').textContent = data.estadisticas.puntaje_promedio ? data.estadisticas.puntaje_promedio.toFixed(1) + ' / 7.0' : '0';
                 document.getElementById('mejorPuntaje').textContent = data.estadisticas.puntaje_maximo ? data.estadisticas.puntaje_maximo.toFixed(1) + ' / 7.0' : '0';
-                document.getElementById('tiempoPromedio').textContent = data.estadisticas.tiempo_promedio_minutos ? data.estadisticas.tiempo_promedio_minutos.toFixed(1) : '0';
+                document.getElementById('tiempoPromedio').textContent = data.estadisticas.tiempo_promedio_segundos ? data.estadisticas.tiempo_promedio_segundos.toFixed(0) : '0';
                 
                 // Actualizar insights
                 const insightsList = document.getElementById('insightsList');
@@ -1454,10 +1531,10 @@
             // Calcular estadísticas
             const totalSesiones = sesionesFiltradas.length;
             const puntajes = sesionesFiltradas.map(s => s.puntaje);
-            const tiempos = sesionesFiltradas.map(s => s.tiempo_segundos / 60);
+            const tiempos = sesionesFiltradas.map(s => s.tiempo_segundos);
 
             const promedioPuntaje = (puntajes.reduce((a, b) => a + b, 0) / totalSesiones).toFixed(2);
-            const promedioTiempo = (tiempos.reduce((a, b) => a + b, 0) / totalSesiones).toFixed(2);
+            const promedioTiempo = (tiempos.reduce((a, b) => a + b, 0) / totalSesiones).toFixed(0);
             const mejorPuntaje = Math.max(...puntajes).toFixed(2);
             const peorPuntaje = Math.min(...puntajes).toFixed(2);
             
@@ -1484,7 +1561,7 @@
                     </div>
                     <div class="maqueta-stat-card-est">
                         <h4>TIEMPO PROMEDIO</h4>
-                        <div class="value">${promedioTiempo} min</div>
+                        <div class="value">${promedioTiempo} seg</div>
                     </div>
                 </div>
 
@@ -1505,15 +1582,15 @@
 
             sesionesFiltradas.forEach(sesion => {
                 const fecha = new Date(sesion.fecha).toLocaleDateString('es-ES');
-                const tiempo = (sesion.tiempo_segundos / 60).toFixed(2);
-                const puntajeClass = sesion.puntaje >= 3 ? 'good' : 'risk';
+                const tiempo = sesion.tiempo_segundos;
+                const puntajeClass = sesion.puntaje >= 4 ? 'good' : 'risk';
                 const profesorNombre = sesion.profesor ? sesion.profesor.nombre : 'Sin registro';
 
                 html += `
                     <tr>
                         <td>${fecha}</td>
                         <td class="${puntajeClass}">${sesion.puntaje.toFixed(1)} / 7.0</td>
-                        <td>${tiempo} min</td>
+                        <td>${tiempo} seg</td>
                         <td>${sesion.interacciones_ia} veces</td>
                         <td><strong>${profesorNombre}</strong></td>
                     </tr>

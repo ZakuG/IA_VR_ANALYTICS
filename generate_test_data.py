@@ -37,7 +37,14 @@ def generar_datos_prueba():
             "Luis Fernández", "Sofia López", "Diego Torres",
             "Valentina Castro", "Sebastián Rojas", "Camila Vargas",
             "Mateo Herrera", "Isabella Morales", "Santiago Díaz",
-            "Lucía Ramírez", "Nicolás Silva", "Emma Flores"
+            "Lucía Ramírez", "Nicolás Silva", "Emma Flores", "Julián Gómez" ,
+            "Olivia Jiménez", "Gabriel Cruz", "Victoria Ortiz",
+            "Daniela Moreno", "Alejandro Sánchez", "Mía Torres",
+            "Joaquín Pérez",
+            "Samuel Ruiz", "Paula Jiménez", "Adrián Flores",
+            "Natalia Gómez", "Bruno Díaz", "Sara Torres",
+            "Emilia Vargas", "Tomás Fernández", "Renata Silva",
+            "Diego Morales", "Camila Jiménez", "Matías Ruiz"
         ]
         
         estudiantes = []
@@ -62,46 +69,90 @@ def generar_datos_prueba():
         print("Creando sesiones de prueba...")
         maquetas = ["Aire acondicionado", "Motor"]
         
+        # Dividir estudiantes en 3 grupos equitativos
+        total_estudiantes = len(estudiantes)
+        tercio = total_estudiantes // 3
+        
+        # Grupo 1: Estudiantes que reprueban (0 a 3.9) - primer tercio
+        estudiantes_bajo = estudiantes[:tercio]
+        
+        # Grupo 2: Estudiantes intermedios (4 a 5.5) - segundo tercio
+        estudiantes_medio = estudiantes[tercio:tercio*2]
+        
+        # Grupo 3: Estudiantes buenos (5.5 a 7) - último tercio
+        estudiantes_alto = estudiantes[tercio*2:]
+        
+        print(f"📊 Distribución de estudiantes:")
+        print(f"   🔴 Bajo rendimiento (0-3.9): {len(estudiantes_bajo)} estudiantes")
+        print(f"   🟡 Rendimiento medio (4-5.5): {len(estudiantes_medio)} estudiantes")
+        print(f"   🟢 Alto rendimiento (5.5-7): {len(estudiantes_alto)} estudiantes")
+        
         # Generar sesiones con datos realistas
         sesiones_generadas = 0
         
-        for estudiante in estudiantes:
-            # Cada estudiante tiene entre 3 y 8 sesiones
-            num_sesiones = random.randint(3, 8)
+        # Función para generar sesión según grupo
+        def generar_sesion(estudiante, grupo_rendimiento):
+            """
+            grupo_rendimiento: 'bajo' (0-3.9), 'medio' (4-5.5), 'alto' (5.5-7)
+            """
+            maqueta = random.choice(maquetas)
             
-            for j in range(num_sesiones):
-                # Seleccionar maqueta aleatoria
-                maqueta = random.choice(maquetas)
+            if grupo_rendimiento == 'bajo':
+                # Reprueban: puntaje 0 a 3.9
+                puntaje_base = random.uniform(0, 3.9)
+                tiempo_base = random.uniform(90, 120)  # Más lentos
+                ia_base = random.uniform(8, 15)  # Usan mucho la IA
                 
-                # Generar datos correlacionados (estudiantes buenos -> menos tiempo, más puntaje)
-                nivel_estudiante = random.uniform(0, 1)  # 0 = bajo, 1 = alto
+            elif grupo_rendimiento == 'medio':
+                # Intermedios: puntaje 4 a 5.5
+                puntaje_base = random.uniform(4.0, 5.5)
+                tiempo_base = random.uniform(60, 90)  # Tiempo medio
+                ia_base = random.uniform(3, 8)  # Uso moderado de IA
                 
-                # Tiempo: estudiantes mejores son más rápidos (30-120 segundos)
-                tiempo_base = 120 - (nivel_estudiante * 60)
-                tiempo_segundos = int(max(30, min(120, random.gauss(tiempo_base, 20))))
-                
-                # Puntaje: correlacionado con nivel del estudiante
-                puntaje_esperado = nivel_estudiante * 5
-                puntaje = int(max(0, min(5, random.gauss(puntaje_esperado, 1))))
-                
-                # Interacciones IA: estudiantes con dificultad usan más la IA
-                ia_base = (1 - nivel_estudiante) * 10
-                interacciones_ia = int(max(0, random.gauss(ia_base, 3)))
-                
-                # Fecha: últimos 30 días
-                fecha = datetime.utcnow() - timedelta(days=random.randint(0, 30))
-                
-                sesion = Sesion(
-                    estudiante_id=estudiante.id,
-                    profesor_id=profesor.id,  # Marcar que el profesor registró esta sesión
-                    maqueta=maqueta,
-                    tiempo_segundos=tiempo_segundos,
-                    puntaje=puntaje,
-                    fecha=fecha,
-                    interacciones_ia=interacciones_ia,
-                    respuestas_detalle='{"respuestas": []}'
-                )
-                
+            else:  # 'alto'
+                # Buenos: puntaje 5.5 a 7
+                puntaje_base = random.uniform(5.5, 7.0)
+                tiempo_base = random.uniform(30, 60)  # Rápidos
+                ia_base = random.uniform(0, 3)  # Poco uso de IA
+            
+            # Agregar variación realista
+            puntaje = int(round(max(0, min(7, random.gauss(puntaje_base, 0.5)))))
+            tiempo_segundos = int(max(30, min(120, random.gauss(tiempo_base, 10))))
+            interacciones_ia = int(max(0, random.gauss(ia_base, 2)))
+            
+            # Fecha: últimos 30 días
+            fecha = datetime.utcnow() - timedelta(days=random.randint(0, 30))
+            
+            return Sesion(
+                estudiante_id=estudiante.id,
+                profesor_id=profesor.id,
+                maqueta=maqueta,
+                tiempo_segundos=tiempo_segundos,
+                puntaje=puntaje,
+                fecha=fecha,
+                interacciones_ia=interacciones_ia,
+                respuestas_detalle='{"respuestas": []}'
+            )
+        
+        # Generar sesiones para cada grupo
+        for estudiante in estudiantes_bajo:
+            num_sesiones = random.randint(3, 12)
+            for _ in range(num_sesiones):
+                sesion = generar_sesion(estudiante, 'bajo')
+                db.session.add(sesion)
+                sesiones_generadas += 1
+        
+        for estudiante in estudiantes_medio:
+            num_sesiones = random.randint(3, 12)
+            for _ in range(num_sesiones):
+                sesion = generar_sesion(estudiante, 'medio')
+                db.session.add(sesion)
+                sesiones_generadas += 1
+        
+        for estudiante in estudiantes_alto:
+            num_sesiones = random.randint(3, 12)
+            for _ in range(num_sesiones):
+                sesion = generar_sesion(estudiante, 'alto')
                 db.session.add(sesion)
                 sesiones_generadas += 1
         

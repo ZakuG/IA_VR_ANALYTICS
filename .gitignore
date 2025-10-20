@@ -71,22 +71,11 @@ app_backup.py
 test_*.py
 debug_*.py
 
-# Documentación temporal/debug (mantener solo README y ARQUITECTURA)
-BUGFIX_*.md
-RESUMEN_*.md
-CORRECCIONES_*.md
-DASHBOARD_ESTUDIANTE.md
-SOLUCION_*.md
-MEJORAS_*.md
-NUEVAS_*.md
-PRUEBAS_*.md
-CIRCULAR_*.md
-GUIA_*.md
-INICIO_RAPIDO*.md
-README_CORRECCIONES.md
+
 
 # Archivos de migración temporal
 
 # Scripts batch específicos
 setup_and_demo.bat
 run.bat
+UnityVRAnalytics.cs

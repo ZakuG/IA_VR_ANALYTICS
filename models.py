@@ -77,7 +77,7 @@ class Estudiante(UserMixin, db.Model):
     codigo = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(200))
-    nivel_habilidad = db.Column(db.Integer, default=3)  # 1-5, default 3 (intermedio)
+    nivel_habilidad = db.Column(db.Integer, default=4)  # 1-5, default 4 (intermedio)
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
     reset_token = db.Column(db.String(100))
     reset_token_expiry = db.Column(db.DateTime)
@@ -206,9 +206,9 @@ class Sesion(db.Model):
             return "Excelente"
         elif self.puntaje >= 5.5:
             return "Muy Bueno"
-        elif self.puntaje >= 4.0:
+        elif self.puntaje >= 4.5:
             return "Bueno"
-        elif self.puntaje >= 3.0:
+        elif self.puntaje >= 4.0:
             return "Regular"
         else:
             return "Insuficiente"
@@ -237,4 +237,4 @@ class Sesion(db.Model):
         self.respuestas_detalle = json.dumps(respuestas)
     
     def __repr__(self):
-        return f'<Sesion {self.id}: {self.estudiante.nombre if self.estudiante else "N/A"} - {self.maqueta} ({self.puntaje}/5)>'
+        return f'<Sesion {self.id}: {self.estudiante.nombre if self.estudiante else "N/A"} - {self.maqueta} ({self.puntaje}/7.0)>'

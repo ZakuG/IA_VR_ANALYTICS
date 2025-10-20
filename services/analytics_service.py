@@ -123,14 +123,21 @@ class AnalyticsService:
                 por_maqueta[sesion.maqueta] = []
             por_maqueta[sesion.maqueta].append(sesion)
         
-        # Progreso temporal (últimas 10 sesiones)
-        progreso = []
-        for i, sesion in enumerate(sesiones[:10][::-1], 1):
-            progreso.append({
-                'sesion': i,
-                'puntaje': sesion.puntaje,
-                'fecha': sesion.fecha.strftime('%d/%m')
-            })
+        # Progreso temporal por maqueta (últimas 10 sesiones por maqueta)
+        progreso_por_maqueta = {}
+        for maqueta, sesiones_maqueta in por_maqueta.items():
+            progreso_por_maqueta[maqueta] = []
+            # Ordenar por fecha descendente y tomar últimas 10
+            sesiones_ordenadas = sorted(sesiones_maqueta, key=lambda s: s.fecha, reverse=True)[:10]
+            # Invertir para mostrar de más antigua a más reciente
+            sesiones_ordenadas = sesiones_ordenadas[::-1]
+            
+            for sesion in sesiones_ordenadas:
+                progreso_por_maqueta[maqueta].append({
+                    'puntaje': sesion.puntaje,
+                    'fecha': sesion.fecha.strftime('%d/%m'),
+                    'fecha_completa': sesion.fecha.strftime('%Y-%m-%d')
+                })
         
         return {
             'success': True,
@@ -142,7 +149,7 @@ class AnalyticsService:
                 'tiempo_promedio_minutos': round(sum(tiempos) / len(tiempos), 2)
             },
             'por_maqueta': self._agrupar_por_maqueta(por_maqueta),
-            'progreso_temporal': progreso,
+            'progreso_temporal': progreso_por_maqueta,
             'insights': self._generar_insights_estudiante(sesiones),
             'sesiones': self._serializar_sesiones(sesiones)
         }
@@ -323,14 +330,21 @@ class AnalyticsService:
                 por_maqueta[sesion.maqueta] = []
             por_maqueta[sesion.maqueta].append(sesion)
         
-        # Progreso temporal (últimas 10 sesiones)
-        progreso = []
-        for i, sesion in enumerate(sesiones[:10][::-1], 1):
-            progreso.append({
-                'sesion': i,
-                'puntaje': sesion.puntaje,
-                'fecha': sesion.fecha.strftime('%d/%m')
-            })
+        # Progreso temporal por maqueta (últimas 10 sesiones por maqueta)
+        progreso_por_maqueta = {}
+        for maqueta, sesiones_maqueta in por_maqueta.items():
+            progreso_por_maqueta[maqueta] = []
+            # Ordenar por fecha descendente y tomar últimas 10
+            sesiones_ordenadas = sorted(sesiones_maqueta, key=lambda s: s.fecha, reverse=True)[:10]
+            # Invertir para mostrar de más antigua a más reciente
+            sesiones_ordenadas = sesiones_ordenadas[::-1]
+            
+            for sesion in sesiones_ordenadas:
+                progreso_por_maqueta[maqueta].append({
+                    'puntaje': sesion.puntaje,
+                    'fecha': sesion.fecha.strftime('%d/%m'),
+                    'fecha_completa': sesion.fecha.strftime('%Y-%m-%d')
+                })
         
         # Insights personalizados
         insights = [f'📚 Sesiones con {profesor.nombre}']
@@ -351,7 +365,7 @@ class AnalyticsService:
                 'tiempo_promedio_minutos': round(sum(tiempos) / len(tiempos), 2)
             },
             'por_maqueta': self._agrupar_por_maqueta(por_maqueta),
-            'progreso_temporal': progreso,
+            'progreso_temporal': progreso_por_maqueta,
             'insights': insights,
             'sesiones': self._serializar_sesiones(sesiones)
         }

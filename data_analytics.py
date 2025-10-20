@@ -60,9 +60,6 @@ class AnalizadorAvanzado:
             'fecha': s.fecha,
             'interacciones_ia': s.interacciones_ia
         } for s in sesiones])
-        
-        # Convertir tiempo a minutos para mejor interpretación
-        self.df['tiempo_minutos'] = self.df['tiempo_segundos'] / 60
     
     def estadisticas_descriptivas(self):
         """Estadísticas descriptivas completas"""
@@ -79,8 +76,8 @@ class AnalizadorAvanzado:
                 'mediana_puntaje': float(self.df['puntaje'].median()),
                 'desviacion_puntaje': float(round(self.df['puntaje'].std(), 2)),
                 'varianza_puntaje': float(round(self.df['puntaje'].var(), 2)),
-                'promedio_tiempo_min': float(round(self.df['tiempo_minutos'].mean(), 2)),
-                'mediana_tiempo_min': float(round(self.df['tiempo_minutos'].median(), 2)),
+                'promedio_tiempo_segundos': float(round(self.df['tiempo_segundos'].mean(), 2)),
+                'mediana_tiempo_segundos': float(round(self.df['tiempo_segundos'].median(), 2)),
                 'tasa_aprobacion': float(round(tasa_aprob, 2)),
                 'mejor_puntaje': int(self.df['puntaje'].max()),
                 'peor_puntaje': int(self.df['puntaje'].min()),
@@ -89,8 +86,8 @@ class AnalizadorAvanzado:
                 'Q1_puntaje': float(self.df['puntaje'].quantile(0.25)),
                 'Q2_puntaje': float(self.df['puntaje'].quantile(0.50)),
                 'Q3_puntaje': float(self.df['puntaje'].quantile(0.75)),
-                'Q1_tiempo': float(round(self.df['tiempo_minutos'].quantile(0.25), 2)),
-                'Q3_tiempo': float(round(self.df['tiempo_minutos'].quantile(0.75), 2)),
+                'Q1_tiempo': float(round(self.df['tiempo_segundos'].quantile(0.25), 2)),
+                'Q3_tiempo': float(round(self.df['tiempo_segundos'].quantile(0.75), 2)),
             }
         }
         
@@ -112,7 +109,7 @@ class AnalizadorAvanzado:
                 'promedio_puntaje': float(round(df_maqueta['puntaje'].mean(), 2)),
                 'mediana_puntaje': float(df_maqueta['puntaje'].median()),
                 'desviacion_puntaje': float(round(df_maqueta['puntaje'].std(), 2)),
-                'promedio_tiempo_min': float(round(df_maqueta['tiempo_minutos'].mean(), 2)),
+                'promedio_tiempo_segundos': float(round(df_maqueta['tiempo_segundos'].mean(), 2)),
                 'tasa_aprobacion': float(round(tasa_aprob, 2)),
                 'promedio_interacciones_ia': float(round(df_maqueta['interacciones_ia'].mean(), 2)),
                 'nivel_dificultad': self._calcular_dificultad(df_maqueta)
@@ -123,11 +120,11 @@ class AnalizadorAvanzado:
     def _calcular_dificultad(self, df_maqueta):
         """Calcula nivel de dificultad basado en puntajes y tiempo"""
         promedio_puntaje = df_maqueta['puntaje'].mean()
-        promedio_tiempo = df_maqueta['tiempo_minutos'].mean()
+        promedio_tiempo = df_maqueta['tiempo_segundos'].mean()
         
         # Normalizar métricas (0-1)
-        puntaje_norm = promedio_puntaje / 5
-        tiempo_norm = min(promedio_tiempo / 3, 1)  # Asumiendo 3 min = difícil
+        puntaje_norm = promedio_puntaje / 7
+        tiempo_norm = min(promedio_tiempo / 240, 1)  # Asumiendo 240 segundos (4 min) = difícil
         
         # Dificultad inversa al puntaje, directa al tiempo
         dificultad = ((1 - puntaje_norm) + tiempo_norm) / 2
@@ -231,7 +228,7 @@ class AnalizadorAvanzado:
         # Agregar datos por estudiante
         estudiantes_stats = self.df.groupby(['estudiante_id', 'estudiante_nombre']).agg({
             'puntaje': 'mean',
-            'tiempo_minutos': 'mean',
+            'tiempo_segundos': 'mean',
             'interacciones_ia': 'mean'
         }).reset_index()
         
@@ -239,7 +236,7 @@ class AnalizadorAvanzado:
             return {}
         
         # Preparar datos para clustering
-        features = estudiantes_stats[['puntaje', 'tiempo_minutos', 'interacciones_ia']].values
+        features = estudiantes_stats[['puntaje', 'tiempo_segundos', 'interacciones_ia']].values
         
         # Normalizar
         scaler = StandardScaler()
@@ -258,7 +255,7 @@ class AnalizadorAvanzado:
                 'nombre': self._nombrar_cluster(cluster_data),
                 'cantidad': int(len(cluster_data)),
                 'promedio_puntaje': float(round(cluster_data['puntaje'].mean(), 2)),
-                'promedio_tiempo_min': float(round(cluster_data['tiempo_minutos'].mean(), 2)),
+                'promedio_tiempo_segundos': float(round(cluster_data['tiempo_segundos'].mean(), 2)),
                 'promedio_ia': float(round(cluster_data['interacciones_ia'].mean(), 2)),
                 'estudiantes': [str(x) for x in cluster_data['estudiante_nombre'].tolist()]
             }
@@ -268,11 +265,11 @@ class AnalizadorAvanzado:
     def _nombrar_cluster(self, cluster_data):
         """Asigna nombre descriptivo al cluster"""
         puntaje_medio = cluster_data['puntaje'].mean()
-        tiempo_medio = cluster_data['tiempo_minutos'].mean()
+        tiempo_medio = cluster_data['tiempo_segundos'].mean()
         
-        if puntaje_medio >= 5.5:
+        if puntaje_medio >= 6:
             return "Estudiantes Destacados"
-        elif puntaje_medio >= 4 and tiempo_medio < self.df['tiempo_minutos'].median():
+        elif puntaje_medio >= 5 and tiempo_medio < self.df['tiempo_segundos'].median():
             return "Estudiantes Eficientes"
         elif puntaje_medio >= 4:
             return "Estudiantes Regulares"
@@ -334,7 +331,7 @@ class AnalizadorAvanzado:
         
         estudiantes_stats = self.df.groupby(['estudiante_id', 'estudiante_nombre']).agg({
             'puntaje': ['mean', 'std', 'count'],
-            'tiempo_minutos': 'mean',
+            'tiempo_segundos': 'mean',
             'interacciones_ia': 'mean'
         }).reset_index()
         
@@ -342,8 +339,8 @@ class AnalizadorAvanzado:
                                      'puntaje_std', 'intentos', 'tiempo_mean', 'ia_mean']
         
         # Criterios de riesgo
-        promedio_tiempo = self.df['tiempo_minutos'].mean()
-        std_tiempo = self.df['tiempo_minutos'].std()
+        promedio_tiempo = self.df['tiempo_segundos'].mean()
+        std_tiempo = self.df['tiempo_segundos'].std()
         
         en_riesgo = estudiantes_stats[
             (estudiantes_stats['puntaje_mean'] < threshold_puntaje) | 
@@ -374,14 +371,14 @@ class AnalizadorAvanzado:
         
         ranking = self.df.groupby(['estudiante_id', 'estudiante_nombre']).agg({
             'puntaje': 'mean',
-            'tiempo_minutos': 'mean',
+            'tiempo_segundos': 'mean',
             'interacciones_ia': 'mean'
         }).reset_index()
         
         # Puntuación compuesta
         # Normalizar tiempo (menor es mejor)
-        max_tiempo = ranking['tiempo_minutos'].max()
-        ranking['tiempo_normalizado'] = 1 - (ranking['tiempo_minutos'] / max_tiempo)
+        max_tiempo = ranking['tiempo_segundos'].max()
+        ranking['tiempo_normalizado'] = 1 - (ranking['tiempo_segundos'] / max_tiempo)
         
         # Fórmula ponderada
         ranking['puntuacion_final'] = (
@@ -394,7 +391,7 @@ class AnalizadorAvanzado:
         ranking = ranking.nlargest(top_n, 'puntuacion_final')
         
         result = ranking[[
-            'estudiante_nombre', 'puntaje', 'tiempo_minutos', 
+            'estudiante_nombre', 'puntaje', 'tiempo_segundos', 
             'interacciones_ia', 'puntuacion_final'
         ]].to_dict('records')
         
@@ -433,7 +430,7 @@ class AnalizadorAvanzado:
         for maqueta in self.df['maqueta'].unique():
             df_maqueta = self.df[self.df['maqueta'] == maqueta]
             promedio = df_maqueta['puntaje'].mean()
-            if promedio < 2.5:
+            if promedio < 4:
                 maquetas_dificiles.append(maqueta)
         
         if maquetas_dificiles:
@@ -460,7 +457,7 @@ class AnalizadorAvanzado:
         result = {
             'distribucion_puntajes': convert_to_native_types(self.df['puntaje'].value_counts().sort_index().to_dict()),
             'puntajes_por_maqueta': convert_to_native_types(self.df.groupby('maqueta')['puntaje'].mean().to_dict()),
-            'tiempos_por_maqueta': convert_to_native_types(self.df.groupby('maqueta')['tiempo_minutos'].mean().to_dict()),
+            'tiempos_por_maqueta': convert_to_native_types(self.df.groupby('maqueta')['tiempo_segundos'].mean().to_dict()),
             'tendencia_temporal': self._preparar_tendencia_temporal(),
             'scatter_tiempo_puntaje': self._preparar_scatter()
         }
@@ -479,7 +476,7 @@ class AnalizadorAvanzado:
     def _preparar_scatter(self):
         """Prepara datos para scatter plot"""
         return {
-            'tiempo': self.df['tiempo_minutos'].tolist(),
+            'tiempo': self.df['tiempo_segundos'].tolist(),
             'puntaje': self.df['puntaje'].tolist(),
             'maqueta': self.df['maqueta'].tolist()
         }
@@ -501,8 +498,6 @@ class AnalizadorAvanzado:
         
         # Preparar features y target
         X = self.df[['tiempo_segundos', 'interacciones_ia']].copy()
-        X['tiempo_minutos'] = X['tiempo_segundos'] / 60
-        X = X[['tiempo_minutos', 'interacciones_ia']]
         
         # Target: 1 = Aprobado (>=4), 0 = Reprobado (<4)
         y = (self.df['puntaje'] >= 4).astype(int)
@@ -549,7 +544,7 @@ class AnalizadorAvanzado:
         
         # Importancia de características (Random Forest)
         feature_importance = {
-            'tiempo_minutos': float(rf_model.feature_importances_[0]),
+            'tiempo_segundos': float(rf_model.feature_importances_[0]),
             'interacciones_ia': float(rf_model.feature_importances_[1])
         }
         
@@ -563,7 +558,7 @@ class AnalizadorAvanzado:
         else:
             interpretacion.append(f"⚠️ Precisión limitada ({max(accuracy_lr, accuracy_rf)*100:.1f}%). Se necesitan más datos")
         
-        if feature_importance['tiempo_minutos'] > feature_importance['interacciones_ia']:
+        if feature_importance['tiempo_segundos'] > feature_importance['interacciones_ia']:
             interpretacion.append("⏱️ El tiempo es el factor más importante para aprobar")
         else:
             interpretacion.append("🤖 El uso de IA es el factor más importante para aprobar")
@@ -601,7 +596,7 @@ class AnalizadorAvanzado:
         # Agrupar por estudiante
         estudiantes_stats = self.df.groupby('estudiante_id').agg({
             'puntaje': ['mean', 'std', 'count'],
-            'tiempo_minutos': 'mean',
+            'tiempo_segundos': 'mean',
             'interacciones_ia': 'mean'
         }).reset_index()
         
@@ -627,7 +622,7 @@ class AnalizadorAvanzado:
             n_clusters = max(2, num_estudiantes // 2)
         
         # Features para clustering
-        features = estudiantes_stats[['puntaje_mean', 'tiempo_minutos_mean', 'interacciones_ia_mean']].fillna(0)
+        features = estudiantes_stats[['puntaje_mean', 'tiempo_segundos_mean', 'interacciones_ia_mean']].fillna(0)
         
         # Normalizar
         scaler = StandardScaler()
@@ -644,19 +639,19 @@ class AnalizadorAvanzado:
             
             # Perfil del cluster
             promedio_puntaje = float(cluster_data['puntaje_mean'].mean())
-            promedio_tiempo = float(cluster_data['tiempo_minutos_mean'].mean())
+            promedio_tiempo = float(cluster_data['tiempo_segundos_mean'].mean())
             promedio_ia = float(cluster_data['interacciones_ia_mean'].mean())
             
             # Clasificar cluster
-            if promedio_puntaje >= 5.5:
+            if promedio_puntaje >= 6:
                 nivel = 'Excelente'
                 color = '#28a745'
                 icono = '🌟'
-            elif promedio_puntaje >= 4:
+            elif promedio_puntaje >= 5:
                 nivel = 'Bueno'
                 color = '#17a2b8'
                 icono = '✅'
-            elif promedio_puntaje >= 3:
+            elif promedio_puntaje >= 4:
                 nivel = 'Regular'
                 color = '#ffc107'
                 icono = '⚠️'
@@ -667,7 +662,7 @@ class AnalizadorAvanzado:
             
             # Características distintivas
             caracteristicas = []
-            if promedio_tiempo < features['tiempo_minutos_mean'].median():
+            if promedio_tiempo < features['tiempo_segundos_mean'].median():
                 caracteristicas.append('Rápidos')
             if promedio_ia > features['interacciones_ia_mean'].median():
                 caracteristicas.append('Usan mucho la IA')
@@ -680,7 +675,7 @@ class AnalizadorAvanzado:
                 'color': color,
                 'total_estudiantes': int(len(cluster_data)),
                 'promedio_puntaje': round(promedio_puntaje, 2),
-                'promedio_tiempo_min': round(promedio_tiempo, 2),
+                'promedio_tiempo_segundos': round(promedio_tiempo, 2),
                 'promedio_uso_ia': round(promedio_ia, 2),
                 'caracteristicas': caracteristicas if caracteristicas else ['Sin características distintivas'],
                 'descripcion': f"{icono} {nivel}: {len(cluster_data)} estudiantes con promedio de {promedio_puntaje:.1f}/7"
@@ -713,21 +708,21 @@ class AnalizadorAvanzado:
         peor = clusters_ordenados[-1]
         
         interpretaciones.append(
-            f"🏆 {mejor[0]} tiene el mejor rendimiento con {mejor[1]['promedio_puntaje']}/7"
+            f"🏆 {mejor[0]} tiene el mejor rendimiento con {mejor[1]['promedio_puntaje']}/7.0"
         )
         
         if peor[1]['promedio_puntaje'] < 4:
             interpretaciones.append(
-                f"📢 {peor[0]} necesita atención: {peor[1]['total_estudiantes']} estudiantes con promedio {peor[1]['promedio_puntaje']}/7"
+                f"📢 {peor[0]} necesita atención: {peor[1]['total_estudiantes']} estudiantes con promedio {peor[1]['promedio_puntaje']}/7.0"
             )
         
         # Identificar patrones
         for nombre, info in clusters_info.items():
-            if 'Usan mucho la IA' in info['caracteristicas'] and info['promedio_puntaje'] < 3:
+            if 'Usan mucho la IA' in info['caracteristicas'] and info['promedio_puntaje'] < 4:
                 interpretaciones.append(
                     f"💡 {nombre} usa mucha IA pero tiene bajo rendimiento. Revisar metodología de estudio"
                 )
-            elif info['promedio_tiempo_min'] > 2 and info['promedio_puntaje'] < 3:
+            elif info['promedio_tiempo_segundos'] > 120 and info['promedio_puntaje'] < 4:
                 interpretaciones.append(
                     f"⏰ {nombre} toma mucho tiempo pero bajo puntaje. Posible dificultad con el contenido"
                 )
