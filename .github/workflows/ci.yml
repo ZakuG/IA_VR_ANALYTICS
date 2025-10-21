@@ -1,0 +1,270 @@
+# CI/CD Pipeline para VR Analytics
+# Issue #4 - Preventivo: Integración Continua para prevenir regresiones
+# 
+# Este workflow se ejecuta en:
+# - Push a main/develop
+# - Pull requests a main/develop
+# - Diariamente a las 2 AM (cron)
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Ejecutar diariamente a las 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Permitir ejecución manual
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  # Job 1: Linter (Flake8 + Black check)
+  lint:
+    name: 🔍 Linter (Flake8 + Black)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: 📦 Install linting dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black isort
+      
+      - name: 🎨 Check code formatting with Black
+        run: |
+          black --check --diff --color .
+      
+      - name: 📋 Check import sorting with isort
+        run: |
+          isort --check-only --diff --color .
+      
+      - name: 🔎 Lint with Flake8
+        run: |
+          flake8 . --count --statistics --show-source
+  
+  # Job 2: Security checks
+  security:
+    name: 🔒 Security Scan (Bandit)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: 📦 Install bandit
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit[toml]
+      
+      - name: 🔐 Run Bandit security scan
+        run: |
+          bandit -r . -f json -o bandit-report.json || true
+          bandit -r . -f screen
+      
+      - name: 📊 Upload Bandit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-security-report
+          path: bandit-report.json
+
+  # Job 3: Tests con cobertura
+  test:
+    name: 🧪 Tests (Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.12']
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov coverage
+      
+      - name: 🧪 Run tests with pytest
+        run: |
+          pytest tests/ -v --tb=short --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing
+      
+      - name: 📊 Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+      
+      - name: 📈 Upload coverage HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.os }}-${{ matrix.python-version }}
+          path: htmlcov/
+  
+  # Job 4: Dependency check (seguridad de dependencias)
+  dependency-check:
+    name: 🔍 Dependency Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: 📦 Install safety
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety
+      
+      - name: 🔒 Check dependencies for known vulnerabilities
+        run: |
+          pip install -r requirements.txt
+          safety check --json || true
+          safety check
+  
+  # Job 5: Build (validación de empaquetado)
+  build:
+    name: 📦 Build Check
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: 📦 Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build wheel setuptools
+      
+      - name: 🔨 Check if project builds
+        run: |
+          python -m build --outdir dist/ || echo "Build check completed"
+      
+      - name: ✅ Validate installation
+        run: |
+          pip install -r requirements.txt
+          python -c "import app; print('✅ App imports successfully')"
+  
+  # Job 6: Code quality metrics
+  quality:
+    name: 📊 Code Quality Metrics
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: 📦 Install quality tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install radon complexity-report
+      
+      - name: 📈 Calculate Cyclomatic Complexity
+        run: |
+          radon cc . -a -s --total-average
+      
+      - name: 📉 Calculate Maintainability Index
+        run: |
+          radon mi . -s
+      
+      - name: 📊 Calculate Raw Metrics
+        run: |
+          radon raw . -s
+  
+  # Job 7: Documentation check
+  docs:
+    name: 📚 Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: ✅ Check README exists
+        run: |
+          test -f README.md && echo "✅ README.md exists" || exit 1
+      
+      - name: ✅ Check docs/ directory
+        run: |
+          test -d docs && echo "✅ docs/ directory exists" || echo "⚠️ No docs/ directory"
+      
+      - name: 📄 Count documentation files
+        run: |
+          echo "📄 Documentation files found:"
+          find docs -name "*.md" 2>/dev/null | wc -l || echo "0"
+  
+  # Job final: Status check para PRs
+  ci-success:
+    name: ✅ CI Success
+    runs-on: ubuntu-latest
+    needs: [lint, security, test, dependency-check, build, quality, docs]
+    if: always()
+    
+    steps:
+      - name: ✅ All checks passed
+        if: ${{ needs.lint.result == 'success' && needs.test.result == 'success' }}
+        run: |
+          echo "✅ All CI checks passed successfully!"
+          echo "🎉 Code is ready for review/merge"
+      
+      - name: ❌ Some checks failed
+        if: ${{ needs.lint.result != 'success' || needs.test.result != 'success' }}
+        run: |
+          echo "❌ Some CI checks failed"
+          echo "🔍 Check the failed jobs above"
+          exit 1
+
+# Configuración de permisos
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write

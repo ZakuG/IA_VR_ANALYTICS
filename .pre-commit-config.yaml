@@ -1,0 +1,121 @@
+# Pre-commit hooks para VR Analytics
+# Issue #4 - Preventivo: Prevenir código de mala calidad antes del commit
+# 
+# Instalación: pre-commit install
+# Ejecutar manualmente: pre-commit run --all-files
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Prevenir commits a main/master
+      - id: no-commit-to-branch
+        args: ['--branch', 'main', '--branch', 'master']
+      
+      # Trailing whitespace
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      
+      # End of file fixer
+      - id: end-of-file-fixer
+      
+      # Check for files that would conflict on case-insensitive filesystems
+      - id: check-case-conflict
+      
+      # Check yaml syntax
+      - id: check-yaml
+        args: [--safe]
+      
+      # Check json syntax
+      - id: check-json
+      
+      # Check merge conflicts
+      - id: check-merge-conflict
+      
+      # Detect private keys
+      - id: detect-private-key
+      
+      # Check python syntax
+      - id: check-ast
+      
+      # Check for debugger imports
+      - id: debug-statements
+      
+      # Prevent large files from being committed
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      
+      # Mixed line ending
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # Black code formatter
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3.12
+        args: [--line-length=120]
+
+  # Flake8 linter
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        args: [--max-line-length=120, --max-complexity=10]
+        additional_dependencies: [
+          flake8-bugbear,
+          flake8-comprehensions,
+          flake8-simplify
+        ]
+
+  # isort - import sorter
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile=black, --line-length=120]
+
+  # Check for print statements (custom)
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: python-no-log-warn
+      - id: python-check-blanket-noqa
+      - id: python-check-mock-methods
+      - id: python-use-type-annotations
+      - id: text-unicode-replacement-char
+
+  # Security checks with bandit
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.0
+    hooks:
+      - id: bandit
+        args: [-c, pyproject.toml]
+        additional_dependencies: ["bandit[toml]"]
+
+# Configuración global
+default_language_version:
+  python: python3.12
+
+# Excluir archivos
+exclude: |
+  (?x)^(
+      migrations/|
+      instance/|
+      .venv/|
+      venv/|
+      env/|
+      build/|
+      dist/|
+      \.eggs/|
+      \.git/|
+      __pycache__/|
+      \.pytest_cache/|
+      docs/_build/|
+      migrate_db\.py|
+      migrate_profesional\.py|
+      add_second_profesor\.py|
+      generate_test_data\.py
+  )
