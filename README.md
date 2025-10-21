@@ -13,7 +13,7 @@ Sistema web desarrollado en Flask para que profesores puedan registrarse y anali
 - **Identificación automática** de estudiantes en riesgo
 - **Análisis por maqueta** (Aire acondicionado, Motor, etc.)
 - **Insights automáticos** basados en los datos
-- **API REST** para integración con Unity/Meta Quest
+- **API REST**
 
 ## 📊 Análisis de Data Science Incluidos
 
