@@ -112,44 +112,15 @@ class AnalyticsService:
                 'sesiones': []
             }
         
-        # Estadísticas básicas
-        puntajes = [s.puntaje for s in sesiones]
-        tiempos = [s.tiempo_segundos / 60 for s in sesiones]
-        
-        # Agrupar por maqueta
-        por_maqueta = {}
-        for sesion in sesiones:
-            if sesion.maqueta not in por_maqueta:
-                por_maqueta[sesion.maqueta] = []
-            por_maqueta[sesion.maqueta].append(sesion)
-        
-        # Progreso temporal por maqueta (últimas 10 sesiones por maqueta)
-        progreso_por_maqueta = {}
-        for maqueta, sesiones_maqueta in por_maqueta.items():
-            progreso_por_maqueta[maqueta] = []
-            # Ordenar por fecha descendente y tomar últimas 10
-            sesiones_ordenadas = sorted(sesiones_maqueta, key=lambda s: s.fecha, reverse=True)[:10]
-            # Invertir para mostrar de más antigua a más reciente
-            sesiones_ordenadas = sesiones_ordenadas[::-1]
-            
-            for sesion in sesiones_ordenadas:
-                progreso_por_maqueta[maqueta].append({
-                    'puntaje': sesion.puntaje,
-                    'fecha': sesion.fecha.strftime('%d/%m'),
-                    'fecha_completa': sesion.fecha.strftime('%Y-%m-%d')
-                })
+        # Calcular estadísticas base (lógica extraída)
+        estadisticas_base = self._calcular_estadisticas_base(sesiones)
         
         return {
             'success': True,
-            'total_sesiones': len(sesiones),
-            'estadisticas': {
-                'puntaje_promedio': round(sum(puntajes) / len(puntajes), 2),
-                'puntaje_maximo': max(puntajes),
-                'puntaje_minimo': min(puntajes),
-                'tiempo_promedio_minutos': round(sum(tiempos) / len(tiempos), 2)
-            },
-            'por_maqueta': self._agrupar_por_maqueta(por_maqueta),
-            'progreso_temporal': progreso_por_maqueta,
+            'total_sesiones': estadisticas_base['total_sesiones'],
+            'estadisticas': estadisticas_base['estadisticas'],
+            'por_maqueta': estadisticas_base['por_maqueta'],
+            'progreso_temporal': estadisticas_base['progreso_temporal'],
             'insights': self._generar_insights_estudiante(sesiones),
             'sesiones': self._serializar_sesiones(sesiones)
         }
@@ -186,6 +157,62 @@ class AnalyticsService:
         }
     
     # Métodos privados helpers
+    
+    def _calcular_estadisticas_base(self, sesiones: List) -> Dict[str, Any]:
+        """
+        Calcula estadísticas base comunes para análisis de estudiante.
+        
+        REFACTORIZACIÓN Issue #3: Extrae lógica duplicada de get_analytics_estudiante()
+        y get_analytics_estudiante_por_profesor() para eliminar ~50 líneas de duplicación.
+        
+        Args:
+            sesiones: Lista de objetos Sesion
+            
+        Returns:
+            Dict con estadísticas base:
+                - total_sesiones
+                - estadisticas (puntaje_promedio, puntaje_maximo, puntaje_minimo, tiempo_promedio_minutos)
+                - por_maqueta (lista con estadísticas por maqueta)
+                - progreso_temporal (dict con progreso por maqueta)
+        """
+        # Estadísticas básicas
+        puntajes = [s.puntaje for s in sesiones]
+        tiempos = [s.tiempo_segundos / 60 for s in sesiones]
+        
+        # Agrupar por maqueta
+        por_maqueta = {}
+        for sesion in sesiones:
+            if sesion.maqueta not in por_maqueta:
+                por_maqueta[sesion.maqueta] = []
+            por_maqueta[sesion.maqueta].append(sesion)
+        
+        # Progreso temporal por maqueta (últimas 10 sesiones por maqueta)
+        progreso_por_maqueta = {}
+        for maqueta, sesiones_maqueta in por_maqueta.items():
+            progreso_por_maqueta[maqueta] = []
+            # Ordenar por fecha descendente y tomar últimas 10
+            sesiones_ordenadas = sorted(sesiones_maqueta, key=lambda s: s.fecha, reverse=True)[:10]
+            # Invertir para mostrar de más antigua a más reciente
+            sesiones_ordenadas = sesiones_ordenadas[::-1]
+            
+            for sesion in sesiones_ordenadas:
+                progreso_por_maqueta[maqueta].append({
+                    'puntaje': sesion.puntaje,
+                    'fecha': sesion.fecha.strftime('%d/%m'),
+                    'fecha_completa': sesion.fecha.strftime('%Y-%m-%d')
+                })
+        
+        return {
+            'total_sesiones': len(sesiones),
+            'estadisticas': {
+                'puntaje_promedio': round(sum(puntajes) / len(puntajes), 2),
+                'puntaje_maximo': max(puntajes),
+                'puntaje_minimo': min(puntajes),
+                'tiempo_promedio_minutos': round(sum(tiempos) / len(tiempos), 2)
+            },
+            'por_maqueta': self._agrupar_por_maqueta(por_maqueta),
+            'progreso_temporal': progreso_por_maqueta
+        }
     
     def _empty_analytics_response(self) -> Dict[str, Any]:
         """Respuesta vacía cuando no hay datos"""
@@ -319,34 +346,10 @@ class AnalyticsService:
                 'sesiones': []
             }
         
-        # Estadísticas básicas (igual que get_analytics_estudiante)
-        puntajes = [s.puntaje for s in sesiones]
-        tiempos = [s.tiempo_segundos / 60 for s in sesiones]
+        # Calcular estadísticas base (lógica extraída - REFACTORIZADO)
+        estadisticas_base = self._calcular_estadisticas_base(sesiones)
         
-        # Agrupar por maqueta
-        por_maqueta = {}
-        for sesion in sesiones:
-            if sesion.maqueta not in por_maqueta:
-                por_maqueta[sesion.maqueta] = []
-            por_maqueta[sesion.maqueta].append(sesion)
-        
-        # Progreso temporal por maqueta (últimas 10 sesiones por maqueta)
-        progreso_por_maqueta = {}
-        for maqueta, sesiones_maqueta in por_maqueta.items():
-            progreso_por_maqueta[maqueta] = []
-            # Ordenar por fecha descendente y tomar últimas 10
-            sesiones_ordenadas = sorted(sesiones_maqueta, key=lambda s: s.fecha, reverse=True)[:10]
-            # Invertir para mostrar de más antigua a más reciente
-            sesiones_ordenadas = sesiones_ordenadas[::-1]
-            
-            for sesion in sesiones_ordenadas:
-                progreso_por_maqueta[maqueta].append({
-                    'puntaje': sesion.puntaje,
-                    'fecha': sesion.fecha.strftime('%d/%m'),
-                    'fecha_completa': sesion.fecha.strftime('%Y-%m-%d')
-                })
-        
-        # Insights personalizados
+        # Insights personalizados con nombre del profesor
         insights = [f'📚 Sesiones con {profesor.nombre}']
         insights.extend(self._generar_insights_estudiante(sesiones))
         
@@ -357,15 +360,10 @@ class AnalyticsService:
                 'nombre': profesor.nombre,
                 'institucion': profesor.institucion
             },
-            'total_sesiones': len(sesiones),
-            'estadisticas': {
-                'puntaje_promedio': round(sum(puntajes) / len(puntajes), 2),
-                'puntaje_maximo': max(puntajes),
-                'puntaje_minimo': min(puntajes),
-                'tiempo_promedio_minutos': round(sum(tiempos) / len(tiempos), 2)
-            },
-            'por_maqueta': self._agrupar_por_maqueta(por_maqueta),
-            'progreso_temporal': progreso_por_maqueta,
+            'total_sesiones': estadisticas_base['total_sesiones'],
+            'estadisticas': estadisticas_base['estadisticas'],
+            'por_maqueta': estadisticas_base['por_maqueta'],
+            'progreso_temporal': estadisticas_base['progreso_temporal'],
             'insights': insights,
             'sesiones': self._serializar_sesiones(sesiones)
         }
