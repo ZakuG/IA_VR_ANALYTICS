@@ -218,10 +218,10 @@ pip freeze > requirements.txt
 
 | Rol | Responsable | Responsabilidades |
 |-----|-------------|-------------------|
-| **Maintainer** | [Nombre] | Coordina sprint, revisa PRs, aprueba merges |
-| **Tester** | [Nombre] | Escribe tests, mide cobertura, valida CI |
-| **Dev** | [Nombre] | Implementa cambios atómicos por issue |
-| **Scribe** | [Nombre] | Documenta métricas, crea reporte final |
+| **Maintainer** | Lucas Castro | Coordina sprint, revisa PRs, aprueba merges |
+| **Tester** | Emilio Conejeros | Escribe tests, mide cobertura, valida CI |
+| **Dev** | Manuel Rivas | Implementa cambios atómicos por issue |
+| **Scribe** | Constanza Fuentealba | Documenta métricas, crea reporte final |
 
 ---
 
