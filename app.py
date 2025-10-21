@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import json
+import logging
 
 # Importar modelos y configuración de DB
 from models import db, bcrypt, Profesor, Estudiante, Sesion
@@ -21,6 +22,7 @@ from utils.constants import (
     MSG_REGISTRO_EXITOSO, MSG_LOGIN_EXITOSO, MSG_ERROR_AUTENTICACION,
     ROLE_PROFESOR, ROLE_ESTUDIANTE
 )
+from utils.logger import setup_logging, get_logger
 
 # Configuración de Flask
 app = Flask(__name__)
@@ -33,6 +35,9 @@ db.init_app(app)
 bcrypt.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+# Configurar logging
+logger = setup_logging(app)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -59,8 +64,8 @@ def register():
     if request.method == 'POST':
         data = request.json
         
-        # Debug: Ver qué datos llegan
-        print("DEBUG - Datos recibidos en /register:", data)
+        # Log de datos recibidos
+        logger.debug(f"Datos recibidos en /register: {data}")
         
         tipo_usuario = data.get('tipo_usuario', 'profesor')
         
@@ -133,8 +138,8 @@ def login():
     if request.method == 'POST':
         data = request.json
         
-        # Debug: Ver qué datos llegan
-        print("DEBUG - Datos recibidos en /login:", data)
+        # Log de datos recibidos
+        logger.debug(f"Datos recibidos en /login: {data}")
         
         auth_service = AuthService()
         
@@ -269,7 +274,7 @@ def get_analytics():
     """Analytics para profesor usando AnalyticsService"""
     import time
     inicio = time.time()
-    print(f"🔵 Iniciando /api/analytics para profesor ID={current_user.id if hasattr(current_user, 'id') else 'N/A'}")
+    logger.info(f"Iniciando /api/analytics para profesor ID={current_user.id if hasattr(current_user, 'id') else 'N/A'}")
     
     if not isinstance(current_user, Profesor):
         return jsonify({
@@ -279,11 +284,11 @@ def get_analytics():
     
     try:
         analytics_service = AnalyticsService()
-        print(f"  ⏱️ Llamando a get_analytics_profesor...")
+        logger.debug("Llamando a get_analytics_profesor...")
         resultado = analytics_service.get_analytics_profesor(current_user.id)
         
         duracion = time.time() - inicio
-        print(f"✅ /api/analytics completado en {duracion:.2f}s")
+        logger.info(f"/api/analytics completado en {duracion:.2f}s")
         
         if resultado.get('success', True):
             return jsonify(resultado), HTTP_OK
@@ -293,8 +298,8 @@ def get_analytics():
     except Exception as e:
         import traceback
         duracion = time.time() - inicio
-        print(f"❌ Error en analytics después de {duracion:.2f}s:", str(e))
-        print(traceback.format_exc())
+        logger.error(f"Error en analytics después de {duracion:.2f}s: {str(e)}")
+        logger.debug(traceback.format_exc())
         return jsonify({
             'error': str(e),
             'message': 'Error al procesar los datos',
@@ -379,8 +384,8 @@ def register_session_manual():
     
     data = request.json
     
-    # Debug: Ver qué datos llegan
-    print("DEBUG - Datos recibidos en /api/session/manual:", data)
+    # Log de datos recibidos
+    logger.debug(f"Datos recibidos en /api/session/manual: {data}")
     
     # El frontend puede enviar 'estudiante_id' (number) o 'codigo_estudiante' (string)
     estudiante_id = data.get('estudiante_id')
@@ -488,22 +493,22 @@ def estudiante_analytics():
         analytics_service = AnalyticsService()
         resultado = analytics_service.get_analytics_estudiante(current_user.id)
         
-        # 🔍 DEBUG: Log de respuesta
-        print(f"📊 DEBUG Analytics Estudiante ID={current_user.id}:")
-        print(f"  - success: {resultado.get('success')}")
-        print(f"  - total_sesiones: {resultado.get('total_sesiones')}")
-        print(f"  - tiene estadisticas: {'estadisticas' in resultado}")
-        print(f"  - tiene por_maqueta: {'por_maqueta' in resultado}")
-        print(f"  - tiene progreso_temporal: {'progreso_temporal' in resultado}")
+        # Log de respuesta
+        logger.debug(f"Analytics Estudiante ID={current_user.id}:")
+        logger.debug(f"  - success: {resultado.get('success')}")
+        logger.debug(f"  - total_sesiones: {resultado.get('total_sesiones')}")
+        logger.debug(f"  - tiene estadisticas: {'estadisticas' in resultado}")
+        logger.debug(f"  - tiene por_maqueta: {'por_maqueta' in resultado}")
+        logger.debug(f"  - tiene progreso_temporal: {'progreso_temporal' in resultado}")
         if resultado.get('por_maqueta'):
-            print(f"  - por_maqueta[0]: {resultado['por_maqueta'][0]}")
+            logger.debug(f"  - por_maqueta[0]: {resultado['por_maqueta'][0]}")
         
         return jsonify(resultado), HTTP_OK
             
     except Exception as e:
         import traceback
-        print("❌ Error en analytics estudiante:", str(e))
-        print(traceback.format_exc())
+        logger.error(f"Error en analytics estudiante: {str(e)}")
+        logger.debug(traceback.format_exc())
         return jsonify({
             'success': True,
             'total_sesiones': 0,
@@ -549,17 +554,17 @@ def estudiante_analytics_por_profesor(profesor_id):
             profesor_id
         )
         
-        # 🔍 DEBUG
-        print(f"📊 Analytics por profesor - Estudiante ID={current_user.id}, Profesor ID={profesor_id}:")
-        print(f"  - success: {resultado.get('success')}")
-        print(f"  - total_sesiones: {resultado.get('total_sesiones')}")
+        # Log de resultados
+        logger.debug(f"Analytics por profesor - Estudiante ID={current_user.id}, Profesor ID={profesor_id}:")
+        logger.debug(f"  - success: {resultado.get('success')}")
+        logger.debug(f"  - total_sesiones: {resultado.get('total_sesiones')}")
         
         return jsonify(resultado), HTTP_OK
         
     except Exception as e:
         import traceback
-        print(f"❌ Error en analytics estudiante por profesor (ID={profesor_id}):", str(e))
-        print(traceback.format_exc())
+        logger.error(f"Error en analytics estudiante por profesor (ID={profesor_id}): {str(e)}")
+        logger.debug(traceback.format_exc())
         return jsonify({
             'success': True,  # ✅ Cambiar a True para no romper el frontend
             'profesor': {
