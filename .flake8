@@ -1,0 +1,60 @@
+[flake8]
+# Configuración del linter flake8 para VR Analytics
+# Issue #4 - Preventivo: Prevenir regresión de calidad de código
+
+# Longitud máxima de línea
+max-line-length = 120
+
+# Complejidad ciclomática máxima (número de caminos en una función)
+max-complexity = 10
+
+# Directorios y archivos a excluir
+exclude =
+    .git,
+    __pycache__,
+    .pytest_cache,
+    .venv,
+    venv,
+    env,
+    instance,
+    migrations,
+    build,
+    dist,
+    *.egg-info,
+    .tox,
+    docs,
+    # Scripts de migración (pueden tener código legacy)
+    migrate_db.py,
+    migrate_profesional.py,
+    add_second_profesor.py,
+    generate_test_data.py
+
+# Errores y warnings a ignorar
+ignore =
+    # E203: whitespace before ':' (conflicto con black)
+    E203,
+    # W503: line break before binary operator (conflicto con black)
+    W503,
+    # E501: line too long (ya manejado por max-line-length)
+    E501
+
+# Reglas específicas por tipo de archivo
+per-file-ignores =
+    # __init__.py puede tener imports no usados
+    __init__.py:F401
+    # tests pueden tener líneas más largas
+    tests/*.py:E501
+    # app.py puede tener muchos imports
+    app.py:E402
+
+# Formato de output
+format = %(path)s:%(row)d:%(col)d: %(code)s %(text)s
+
+# Mostrar estadísticas al final
+statistics = True
+
+# Contar warnings
+count = True
+
+# Mostrar código fuente del error
+show-source = True
