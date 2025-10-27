@@ -109,5 +109,12 @@ def init_db():
 # ============================================
 
 if __name__ == '__main__':
-    init_db()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Solo crear tablas en desarrollo local
+    if os.getenv('FLASK_ENV') == 'development':
+        init_db()
+    
+    # Obtener puerto de variable de entorno (para Render/Heroku)
+    port = int(os.getenv('PORT', 5000))
+    debug = os.getenv('FLASK_ENV') == 'development'
+    
+    app.run(debug=debug, host='0.0.0.0', port=port)
