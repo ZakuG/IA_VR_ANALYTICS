@@ -363,13 +363,8 @@ function displayCorrelations(corr) {
 
         <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 5px;">
             <strong style=" color: #856404;">Recomendaciones:</strong>
-            <ul style="margin: 5px 0; padding-left: 20px; font-size: 13px; color: #856404;">
+            <ul style="margin: 5px 0; padding-left: 20px; color: #856404;">
                 ${corr.recomendaciones.map(r => `<li>${r}</li>`).join('')}
-            </ul>
-        </div>
-
-        <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px;">
-            <ul style="margin: 5px 0; padding-left: 20px;">
             </ul>
         </div>
     `;
