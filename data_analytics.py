@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, silhouette_score
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -94,25 +94,39 @@ class AnalizadorAvanzado:
         return convert_to_native_types(stats_dict)
     
     def analisis_por_maqueta(self):
-        """Análisis detallado por tipo de maqueta"""
+        """Análisis detallado por tipo de maqueta (OPTIMIZADO con groupby múltiple)"""
         if self.df.empty:
             return {}
         
+        # OPTIMIZACIÓN: Una sola operación groupby para TODAS las métricas
+        agg_dict = {
+            'puntaje': ['count', 'mean', 'median', 'std'],
+            'tiempo_segundos': 'mean',
+            'interacciones_ia': 'mean'
+        }
+        
+        grouped = self.df.groupby('maqueta').agg(agg_dict)
+        
         maquetas = {}
-        for maqueta in self.df['maqueta'].unique():
-            df_maqueta = self.df[self.df['maqueta'] == maqueta]
+        for maqueta in grouped.index:
+            row = grouped.loc[maqueta]
             
-            tasa_aprob = (df_maqueta['puntaje'] >= 4).sum() / len(df_maqueta) * 100
+            total = int(row[('puntaje', 'count')])
+            promedio = float(row[('puntaje', 'mean')])
+            
+            # Calcular tasa de aprobación para esta maqueta
+            mask = self.df['maqueta'] == maqueta
+            tasa_aprobacion = (self.df.loc[mask, 'puntaje'] >= 4).sum() / total * 100
             
             maquetas[str(maqueta)] = {
-                'total_intentos': int(len(df_maqueta)),
-                'promedio_puntaje': float(round(df_maqueta['puntaje'].mean(), 2)),
-                'mediana_puntaje': float(df_maqueta['puntaje'].median()),
-                'desviacion_puntaje': float(round(df_maqueta['puntaje'].std(), 2)),
-                'promedio_tiempo_segundos': float(round(df_maqueta['tiempo_segundos'].mean(), 2)),
-                'tasa_aprobacion': float(round(tasa_aprob, 2)),
-                'promedio_interacciones_ia': float(round(df_maqueta['interacciones_ia'].mean(), 2)),
-                'nivel_dificultad': self._calcular_dificultad(df_maqueta)
+                'total_intentos': total,
+                'promedio_puntaje': round(promedio, 2),
+                'mediana_puntaje': float(row[('puntaje', 'median')]),
+                'desviacion_puntaje': round(float(row[('puntaje', 'std')]), 2),
+                'promedio_tiempo_segundos': round(float(row[('tiempo_segundos', 'mean')]), 2),
+                'tasa_aprobacion': round(tasa_aprobacion, 2),
+                'promedio_interacciones_ia': round(float(row[('interacciones_ia', 'mean')]), 2),
+                'nivel_dificultad': self._calcular_dificultad_optimized(promedio, float(row[('tiempo_segundos', 'mean')]))
             }
         
         return convert_to_native_types(maquetas)
@@ -122,6 +136,11 @@ class AnalizadorAvanzado:
         promedio_puntaje = df_maqueta['puntaje'].mean()
         promedio_tiempo = df_maqueta['tiempo_segundos'].mean()
         
+        return self._calcular_dificultad_optimized(promedio_puntaje, promedio_tiempo)
+    
+    @staticmethod
+    def _calcular_dificultad_optimized(promedio_puntaje: float, promedio_tiempo: float) -> str:
+        """OPTIMIZADO: Método estático para cálculo de dificultad"""
         # Normalizar métricas (0-1)
         puntaje_norm = promedio_puntaje / 7
         tiempo_norm = min(promedio_tiempo / 240, 1)  # Asumiendo 240 segundos (4 min) = difícil
@@ -217,7 +236,7 @@ class AnalizadorAvanzado:
     
     def clustering_estudiantes(self, n_clusters=3):
         """
-        Agrupa estudiantes por patrones de comportamiento usando K-Means
+        Agrupa estudiantes por patrones de comportamiento usando K-Means (OPTIMIZADO)
         
         Args:
             n_clusters: Número de grupos a formar
@@ -225,15 +244,24 @@ class AnalizadorAvanzado:
         if self.df.empty or len(self.df) < n_clusters:
             return {}
         
-        # Agregar datos por estudiante
+        # Agregar datos por estudiante (una sola operación)
         estudiantes_stats = self.df.groupby(['estudiante_id', 'estudiante_nombre']).agg({
             'puntaje': 'mean',
             'tiempo_segundos': 'mean',
             'interacciones_ia': 'mean'
         }).reset_index()
         
-        if len(estudiantes_stats) < n_clusters:
-            return {}
+        num_estudiantes = len(estudiantes_stats)
+        
+        if num_estudiantes < 2:
+            return {
+                'clustering_disponible': False,
+                'razon': 'Se requieren al menos 2 estudiantes para clustering',
+                'num_estudiantes': num_estudiantes
+            }
+        
+        # Ajustar n_clusters al número de estudiantes disponibles
+        n_clusters = min(n_clusters, max(2, num_estudiantes // 2))
         
         # Preparar datos para clustering
         features = estudiantes_stats[['puntaje', 'tiempo_segundos', 'interacciones_ia']].values
@@ -244,12 +272,16 @@ class AnalizadorAvanzado:
         
         # K-Means
         kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-        estudiantes_stats['cluster'] = kmeans.fit_predict(features_scaled)
+        labels = kmeans.fit_predict(features_scaled)
+        
+        # OPTIMIZACIÓN: Calcular silhouette score (métrica de calidad)
+        silhouette_avg = silhouette_score(features_scaled, labels) if num_estudiantes > n_clusters else 0
         
         # Analizar clusters
         clusters = {}
         for i in range(n_clusters):
-            cluster_data = estudiantes_stats[estudiantes_stats['cluster'] == i]
+            mask = labels == i
+            cluster_data = estudiantes_stats[mask]
             
             clusters[f'Grupo_{i+1}'] = {
                 'nombre': self._nombrar_cluster(cluster_data),
@@ -260,7 +292,15 @@ class AnalizadorAvanzado:
                 'estudiantes': [str(x) for x in cluster_data['estudiante_nombre'].tolist()]
             }
         
-        return convert_to_native_types(clusters)
+        # OPTIMIZACIÓN: Retornar métricas adicionales
+        return convert_to_native_types({
+            'clustering_disponible': True,
+            'n_clusters': n_clusters,
+            'clusters': clusters,
+            'silhouette_score': round(silhouette_avg, 3),
+            'calidad': 'Excelente' if silhouette_avg > 0.7 else 'Buena' if silhouette_avg > 0.5 else 'Moderada',
+            'total_estudiantes': num_estudiantes
+        })
     
     def _nombrar_cluster(self, cluster_data):
         """Asigna nombre descriptivo al cluster"""
@@ -478,7 +518,8 @@ class AnalizadorAvanzado:
         return {
             'tiempo': self.df['tiempo_segundos'].tolist(),
             'puntaje': self.df['puntaje'].tolist(),
-            'maqueta': self.df['maqueta'].tolist()
+            'maqueta': self.df['maqueta'].tolist(),
+            'estudiante': self.df['estudiante_nombre'].tolist()
         }
     
     # ============================================
@@ -778,7 +819,7 @@ class AnalizadorAvanzado:
             'disponible': True,
             'correlaciones': correlaciones,
             'matriz_correlacion': matriz.to_dict(),
-            'resumen': self._generar_resumen_correlaciones(correlaciones)
+            'resumen': correlaciones
         })
     
     def _fuerza_correlacion(self, corr):
@@ -792,24 +833,13 @@ class AnalizadorAvanzado:
             return 'Fuerte'
     
     def _interpretar_correlacion(self, corr, pval, var1, var2):
-        """Interpreta una correlación con su p-value"""
+        """Interpreta una correlación"""
         if pval >= 0.05:
-            return f"No hay correlación significativa entre {var1} y {var2} (p={pval:.3f})"
+            return f"No hay correlación significativa entre {var1} y {var2})"
         
         if corr > 0:
-            return f"✅ Correlación positiva: A mayor {var1}, mayor {var2} (p={pval:.3f})"
+            return f"✅ Correlación positiva: A mayor {var1}, mayor {var2})"
         else:
-            return f"⬇️ Correlación negativa: A mayor {var1}, menor {var2} (p={pval:.3f})"
+            return f"⬇️ Correlación negativa: A mayor {var1}, menor {var2})"
     
-    def _generar_resumen_correlaciones(self, correlaciones):
-        """Genera un resumen ejecutivo de las correlaciones"""
-        resumen = []
-        
-        for nombre, datos in correlaciones.items():
-            if datos['significativo']:
-                resumen.append(f"📊 {datos['interpretacion']} - Fuerza: {datos['fuerza']}")
-        
-        if not resumen:
-            resumen.append("No se encontraron correlaciones estadísticamente significativas (p < 0.05)")
-        
-        return resumen
+

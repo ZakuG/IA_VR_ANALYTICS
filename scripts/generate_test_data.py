@@ -1,6 +1,7 @@
 # generate_test_data.py
 """
 Script para generar datos de prueba para el sistema VR Analytics
+Configurado para PostgreSQL con Supabase
 """
 
 from app import app, db, Profesor, Estudiante, Sesion
@@ -14,10 +15,32 @@ def generar_datos_prueba():
     """Genera datos de prueba para demostración"""
     
     with app.app_context():
-        # Limpiar base de datos
-        print("Limpiando base de datos...")
-        db.drop_all()
+        # Limpiar base de datos (con CASCADE para PostgreSQL)
+        print("Limpiando base de datos PostgreSQL...")
+        
+        try:
+            # Primero eliminar datos de tablas (alternativa más segura)
+            db.session.execute(db.text('TRUNCATE TABLE sesion CASCADE'))
+            db.session.execute(db.text('TRUNCATE TABLE estudiante_profesor CASCADE'))
+            db.session.execute(db.text('TRUNCATE TABLE estudiante CASCADE'))
+            db.session.execute(db.text('TRUNCATE TABLE profesor CASCADE'))
+            db.session.commit()
+            print("✅ Datos eliminados (TRUNCATE CASCADE)")
+        except Exception as e:
+            print(f"⚠️ TRUNCATE falló, usando DROP TABLE: {e}")
+            db.session.rollback()
+            
+            # Si TRUNCATE falla, usar DROP TABLE CASCADE
+            db.session.execute(db.text('DROP TABLE IF EXISTS sesion CASCADE'))
+            db.session.execute(db.text('DROP TABLE IF EXISTS estudiante_profesor CASCADE'))
+            db.session.execute(db.text('DROP TABLE IF EXISTS estudiante CASCADE'))
+            db.session.execute(db.text('DROP TABLE IF EXISTS profesor CASCADE'))
+            db.session.commit()
+            print("✅ Tablas eliminadas (DROP CASCADE)")
+        
+        # Crear todas las tablas
         db.create_all()
+        print("✅ Tablas creadas en PostgreSQL")
         
         # Crear profesor de prueba
         print("Creando profesor de prueba...")

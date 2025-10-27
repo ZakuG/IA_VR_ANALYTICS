@@ -19,6 +19,11 @@ parts/
 sdist/
 var/
 wheels/
+unity/
+# Environment variables
+.env
+.env.local
+.env.*.local
 *.egg-info/
 .installed.cfg
 *.egg
@@ -70,10 +75,7 @@ Thumbs.db
 app_backup.py
 /test_*.py
 debug_*.py
-
-# IMPORTANTE: Permitir tests en carpeta tests/
-!tests/test_*.py
-
+*.md
 
 
 # Archivos de migración temporal

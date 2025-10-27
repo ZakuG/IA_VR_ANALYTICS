@@ -4,160 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro Manual de Sesión - VR Analytics</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        h2 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 600;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        button {
-            padding: 14px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-right: 10px;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-        }
-
-        .btn-secondary:hover {
-            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
-        }
-
-        .alert {
-            padding: 12px 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            display: none;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-        }
-
-        .alert-error {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-
-        .button-group {
-            margin-top: 30px;
-        }
-
-        .help-text {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-        input[type="range"] {
-  width: 100%;
-  height: 8px;
-  background: #ddd;
-  border-radius: 4px;
-  outline: none;
-  margin: 0;
-  padding: 0;
-}
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/manual-entry.css') }}">
 </head>
 <body>
     <div class="container">
+        <a href="/dashboard" class="back-link">← Volver al Dashboard</a>
+        
         <h2>📝 Registro Manual de Sesión VR</h2>
-        <p class="subtitle">Registra manualmente los datos de una sesión de realidad virtual cuando no haya conexión desde la Meta Quest</p>
+        <p class="subtitle">Registra los datos de una sesión de realidad virtual</p>
         
         <div id="alertSuccess" class="alert alert-success"></div>
         <div id="alertError" class="alert alert-error"></div>
@@ -178,15 +32,48 @@
                         <option value="">Selecciona una maqueta...</option>
                         <option value="Aire acondicionado">❄️ Aire Acondicionado</option>
                         <option value="Motor">⚙️ Motor</option>
+                        <option value="Otro">✏️ Otro (especificar)</option>
                     </select>
                     <input type="text" id="maqueta_otra" name="maqueta_otra" style="display:none; margin-top: 10px;" placeholder="Especifica la maqueta...">
                     <div class="help-text">Selecciona el escenario o maqueta utilizado</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="tiempo">Tiempo (segundos) *</label>
-                    <input type="number" id="tiempo_segundos" name="tiempo_segundos" required min="0" step="1" placeholder="Ej: 60" value="60">
-                    <div class="help-text">Duración de la sesión en segundos</div>
+                    <label for="tiempo_minutos">⏱️ Tiempo de Sesión *</label>
+                    <div class="tiempo-container">
+                        <div class="tiempo-field">
+                            <input 
+                                type="number" 
+                                id="tiempo_minutos" 
+                                name="tiempo_minutos" 
+                                min="0" 
+                                max="60" 
+                                step="1" 
+                                value="1"
+                                placeholder="0"
+                            >
+                            <span class="tiempo-label">Min</span>
+                        </div>
+                        <span class="tiempo-separator">:</span>
+                        <div class="tiempo-field">
+                            <input 
+                                type="number" 
+                                id="tiempo_segundos" 
+                                name="tiempo_segundos" 
+                                min="0" 
+                                max="59" 
+                                step="1" 
+                                value="0" 
+                                placeholder="0"
+                            >
+                            <span class="tiempo-label">Seg</span>
+                        </div>
+                        <div class="tiempo-total">
+                            <span class="tiempo-total-label">Total</span>
+                            <span id="tiempoTotal" class="tiempo-total-value">60s</span>
+                        </div>
+                    </div>
+                    <div class="help-text">Tiempo total de la sesión VR (minutos y segundos)</div>
                 </div>
             </div>
 
@@ -194,7 +81,7 @@
                 <div class="form-group">
                     <label for="puntaje">Puntaje *</label>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="range" id="puntaje" name="puntaje" required min="0" max="7" step="1" value="4" style="flex: 1;" oninput="document.getElementById('puntajeValue').textContent = this.value">
+                        <input type="range" id="puntaje" name="puntaje" required min="0" max="7" step="1" value="4" style="flex: 1;">
                         <span id="puntajeValue" style="font-size: 24px; font-weight: bold; color: #667eea; min-width: 50px; text-align: center;">4</span>
                         <span style="color: #999;">/ 7</span>
                     </div>
@@ -226,114 +113,6 @@
         </form>
     </div>
 
-    <script>
-        // Mostrar campo personalizado cuando se selecciona "Otro"
-        document.getElementById('maqueta').addEventListener('change', function() {
-            const otraInput = document.getElementById('maqueta_otra');
-            if (this.value === 'Otro') {
-                otraInput.style.display = 'block';
-                otraInput.required = true;
-            } else {
-                otraInput.style.display = 'none';
-                otraInput.required = false;
-                otraInput.value = '';
-            }
-        });
-
-        // Cargar lista de estudiantes
-        async function loadStudents() {
-            try {
-                const response = await fetch('/api/estudiantes');
-                const data = await response.json();
-                
-                const select = document.getElementById('estudiante');
-                data.forEach(estudiante => {
-                    const option = document.createElement('option');
-                    option.value = estudiante.id;
-                    option.textContent = `${estudiante.nombre} - ${estudiante.codigo}`;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error al cargar estudiantes:', error);
-            }
-        }
-
-        // Enviar formulario
-        document.getElementById('manualEntryForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const alertSuccess = document.getElementById('alertSuccess');
-            const alertError = document.getElementById('alertError');
-            
-            // Ocultar alertas previas
-            alertSuccess.style.display = 'none';
-            alertError.style.display = 'none';
-
-            // Determinar nombre de maqueta
-            let nombreMaqueta = document.getElementById('maqueta').value;
-            if (nombreMaqueta === 'Otro') {
-                nombreMaqueta = document.getElementById('maqueta_otra').value;
-            }
-
-            // Preparar datos
-            let respuestas = [];
-            const respuestasText = document.getElementById('respuestas').value.trim();
-            
-            if (respuestasText) {
-                try {
-                    respuestas = JSON.parse(respuestasText);
-                } catch (e) {
-                    // Si no es JSON válido, convertir a array de strings
-                    respuestas = respuestasText.split('\n').filter(r => r.trim());
-                }
-            }
-
-            // Obtener tiempo en segundos directamente
-            const tiempoSegundos = parseInt(document.getElementById('tiempo_segundos').value);
-
-            const data = {
-                estudiante_id: parseInt(document.getElementById('estudiante').value),
-                maqueta: nombreMaqueta,
-                tiempo_segundos: tiempoSegundos,
-                puntaje: parseFloat(document.getElementById('puntaje').value),
-                interacciones_ia: parseInt(document.getElementById('interacciones').value) || 0,
-                respuestas: respuestas
-            };
-
-            try {
-                const response = await fetch('/api/session/manual', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    alertSuccess.textContent = `✓ ${result.message}`;
-                    alertSuccess.style.display = 'block';
-                    document.getElementById('manualEntryForm').reset();
-                    document.getElementById('puntajeValue').textContent = '4';
-                    
-                    // Redirigir al dashboard después de 2 segundos
-                    setTimeout(() => {
-                        window.location.href = '/dashboard';
-                    }, 2000);
-                } else {
-                    alertError.textContent = `✗ ${result.message}`;
-                    alertError.style.display = 'block';
-                }
-            } catch (error) {
-                alertError.textContent = '✗ Error al registrar la sesión. Intenta nuevamente.';
-                alertError.style.display = 'block';
-                console.error('Error:', error);
-            }
-        });
-
-        // Cargar estudiantes al iniciar
-        loadStudents();
-    </script>
+    <script src="{{ url_for('static', filename='js/manual-entry.js') }}"></script>
 </body>
 </html>
