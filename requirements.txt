@@ -1,0 +1,52 @@
+# ============================================# Core Framework
+
+# REQUIREMENTS.TXTFlask==3.1.2
+
+# Dependencias para VR Analytics PlatformFlask-SQLAlchemy==3.1.1
+
+# ============================================Flask-Bcrypt==1.0.1
+
+Flask-Login==0.6.3
+
+# Flask FrameworkWerkzeug==3.1.3
+
+Flask==3.0.0
+
+Werkzeug==3.0.1# Database
+
+psycopg2-binary==2.9.9
+
+# Flask Extensions
+
+Flask-Login==0.6.3# Data Science (mantener numpy 1.x por compatibilidad)
+
+Flask-SQLAlchemy==3.1.1pandas==2.2.3
+
+Flask-Bcrypt==1.0.1numpy==1.26.4
+
+Flask-Mail==0.9.1scipy==1.14.1
+
+scikit-learn==1.5.2
+
+# Database
+
+SQLAlchemy==2.0.23# Utilities
+
+psycopg2-binary==2.9.9  # Para PostgreSQL/Supabasepython-dotenv==1.0.1
+
+
+
+# Data Science y Analytics# Testing dependencies
+
+pandas==2.1.4pytest==8.4.2
+
+numpy==1.26.2pytest-cov==7.0.0
+
+scipy==1.11.4coverage==7.11.0
+
+
+# Machine Learning
+scikit-learn==1.3.2
+
+# Utilities
+python-dotenv==1.0.0
