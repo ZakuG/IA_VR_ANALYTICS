@@ -1,211 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro - VR Analytics</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-        }
-
-        /* Permitir selección en inputs y elementos interactivos */
-        input, textarea, select, button, [contenteditable="true"] {
-            user-select: text;
-            -webkit-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .register-container {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            width: 100%;
-            max-width: 500px;
-        }
-
-        h2 {
-            color: #667eea;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-
-        select {
-            cursor: pointer;
-            background-color: white;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .tipo-usuario-selector {
-            display: flex;
-            gap: 15px;
-            margin-top: 10px;
-        }
-
-        .tipo-usuario-option {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .tipo-usuario-option:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
-        }
-
-        .tipo-usuario-option input[type="radio"] {
-            width: auto;
-            margin-right: 10px;
-        }
-
-        .tipo-usuario-option input[type="radio"]:checked + label {
-            color: #667eea;
-            font-weight: bold;
-        }
-
-        .tipo-usuario-option.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-        }
-
-        .tipo-usuario-option .icon {
-            font-size: 24px;
-            margin-right: 10px;
-        }
-
-        .tipo-usuario-option .text {
-            font-weight: 600;
-            color: #333;
-        }
-
-        small {
-            display: block;
-            color: #666;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 5px;
-            background: #667eea;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .btn:hover {
-            background: #5568d3;
-        }
-
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .success {
-            background: #d4edda;
-            color: #155724;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .link {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-        }
-
-        .link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .link a:hover {
-            text-decoration: underline;
-        }
-
-        .password-strength {
-            height: 5px;
-            background: #ddd;
-            border-radius: 3px;
-            margin-top: 5px;
-            overflow: hidden;
-        }
-
-        .password-strength-bar {
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s, background 0.3s;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 </head>
 <body>
     <div class="register-container">
@@ -245,13 +44,11 @@
                 <input type="email" id="email" name="email" required>
             </div>
 
-            <!-- Campos específicos para Profesor -->
             <div class="form-group" id="institucionGroup">
                 <label for="institucion">Institución Educativa</label>
                 <input type="text" id="institucion" name="institucion" placeholder="Universidad, Colegio, etc.">
             </div>
 
-            <!-- Campos específicos para Estudiante -->
             <div class="form-group" id="nivelGroup" style="display: none;">
                 <label for="nivel">Nivel de Habilidad Inicial</label>
                 <select id="nivel" name="nivel">
@@ -268,7 +65,7 @@
                 <select id="email_profesor" name="email_profesor">
                     <option value="">Ninguno - Inscribirme después</option>
                 </select>
-                <small style="color: #666; font-size: 12px;">Puedes inscribirte con un profesor después desde tu dashboard</small>
+                <small style="color: #666; font-size: 12px;">Puedes inscribirte con un profesor luego</small>
             </div>
 
             <div class="form-group">
@@ -280,7 +77,7 @@
             </div>
 
             <div class="form-group">
-                <label for="confirmPassword">Confirmar Contraseña</label>
+                <label for="confirmPassword">Confirmar Contrasena</label>
                 <input type="password" id="confirmPassword" name="confirmPassword" required>
             </div>
 
@@ -288,170 +85,11 @@
         </form>
 
         <div class="link">
-            ¿Ya tienes cuenta? <a href="/login">Inicia sesión aquí</a>
+            Ya tienes cuenta? <a href="/login">Inicia sesión aquí</a>
         </div>
     </div>
 
-    <script>
-        // Manejar selección visual de tipo de usuario
-        document.querySelectorAll('.tipo-usuario-option').forEach(option => {
-            option.addEventListener('click', function() {
-                // Remover selección de todas las opciones
-                document.querySelectorAll('.tipo-usuario-option').forEach(opt => {
-                    opt.classList.remove('selected');
-                });
-                
-                // Agregar selección a la opción clickeada
-                this.classList.add('selected');
-                
-                // Marcar el radio button correspondiente
-                const radio = this.querySelector('input[type="radio"]');
-                radio.checked = true;
-                
-                // Disparar evento change
-                radio.dispatchEvent(new Event('change'));
-            });
-        });
-
-        // Cargar lista de profesores para estudiantes
-        async function loadProfesores() {
-            try {
-                const response = await fetch('/api/profesores');
-                const profesores = await response.json();
-                
-                const select = document.getElementById('email_profesor');
-                profesores.forEach(profesor => {
-                    const option = document.createElement('option');
-                    option.value = profesor.email;
-                    option.textContent = `${profesor.nombre} - ${profesor.institucion || 'Sin institución'}`;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error al cargar profesores:', error);
-            }
-        }
-
-        // Manejar cambio de tipo de usuario
-        document.querySelectorAll('input[name="tipo_usuario"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                const esProfesor = e.target.value === 'profesor';
-                
-                // Mostrar/ocultar campos según tipo de usuario
-                document.getElementById('institucionGroup').style.display = esProfesor ? 'block' : 'none';
-                document.getElementById('nivelGroup').style.display = esProfesor ? 'none' : 'block';
-                document.getElementById('profesorGroup').style.display = esProfesor ? 'none' : 'block';
-                
-                // Actualizar requeridos
-                document.getElementById('institucion').required = esProfesor;
-                // El profesor ya no es requerido - es opcional
-                document.getElementById('email_profesor').required = false;
-                
-                // Cargar profesores si es estudiante
-                if (!esProfesor && document.getElementById('email_profesor').options.length === 1) {
-                    loadProfesores();
-                }
-            });
-        });
-
-        // Password strength indicator
-        document.getElementById('password').addEventListener('input', (e) => {
-            const password = e.target.value;
-            const strengthBar = document.getElementById('strengthBar');
-            let strength = 0;
-
-            if (password.length >= 6) strength += 25;
-            if (password.length >= 10) strength += 25;
-            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
-            if (/[0-9]/.test(password)) strength += 25;
-
-            strengthBar.style.width = strength + '%';
-            
-            if (strength < 50) {
-                strengthBar.style.background = '#dc3545';
-            } else if (strength < 75) {
-                strengthBar.style.background = '#ffc107';
-            } else {
-                strengthBar.style.background = '#28a745';
-            }
-        });
-
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const submitBtn = document.getElementById('submitBtn');
-            const errorDiv = document.getElementById('error');
-            const successDiv = document.getElementById('success');
-            
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (password !== confirmPassword) {
-                errorDiv.textContent = 'Las contraseñas no coinciden';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Registrando...';
-            errorDiv.style.display = 'none';
-            successDiv.style.display = 'none';
-
-            const tipoUsuario = document.querySelector('input[name="tipo_usuario"]:checked').value;
-            
-            const formData = {
-                tipo_usuario: tipoUsuario,
-                nombre: document.getElementById('nombre').value,
-                email: document.getElementById('email').value,
-                password: password
-            };
-
-            // Agregar campos específicos según tipo de usuario
-            if (tipoUsuario === 'profesor') {
-                formData.institucion = document.getElementById('institucion').value;
-            } else {
-                // El código se genera automáticamente en el servidor
-                formData.nivel_habilidad = parseInt(document.getElementById('nivel').value);
-                // Solo agregar email_profesor si se seleccionó uno
-                const emailProfesor = document.getElementById('email_profesor').value;
-                if (emailProfesor) {
-                    formData.email_profesor = emailProfesor;
-                }
-            }
-
-            try {
-                const response = await fetch('/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    // Mostrar código generado si es estudiante
-                    if (tipoUsuario === 'estudiante' && data.codigo) {
-                        successDiv.innerHTML = `¡Registro exitoso!<br>Tu código de estudiante es: <strong>${data.codigo}</strong><br>Redirigiendo al login...`;
-                    } else {
-                        successDiv.textContent = '¡Registro exitoso! Redirigiendo al login...';
-                    }
-                    successDiv.style.display = 'block';
-                    setTimeout(() => {
-                        window.location.href = '/login';
-                    }, 3000); // 3 segundos para estudiantes (para que vean su código)
-                } else {
-                    errorDiv.textContent = data.message || 'Error al registrarse';
-                    errorDiv.style.display = 'block';
-                }
-            } catch (error) {
-                errorDiv.textContent = 'Error de conexión. Intenta nuevamente.';
-                errorDiv.style.display = 'block';
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Registrarse';
-            }
-        });
-    </script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/register.js') }}"></script>
 </body>
 </html>

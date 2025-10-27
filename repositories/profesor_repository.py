@@ -12,7 +12,7 @@ class ProfesorRepository:
     """Repository para gestionar profesores"""
     
     @staticmethod
-    def create(nombre: str, email: str, password: str) -> Profesor:
+    def create(nombre: str, email: str, password: str, institucion: Optional[str] = None) -> Profesor:
         """
         Crea un nuevo profesor
         
@@ -20,6 +20,7 @@ class ProfesorRepository:
             nombre: Nombre del profesor
             email: Email único del profesor
             password: Contraseña
+            institucion: Institución educativa (opcional)
             
         Returns:
             Profesor creado
@@ -31,9 +32,14 @@ class ProfesorRepository:
         if ProfesorRepository.get_by_email(email):
             raise ValueError(f"Ya existe un profesor con email {email}")
         
+        # Normalizar institución (evitar None o cadena vacía)
+        if not institucion or institucion.strip() == '':
+            institucion = "Sin institución"
+        
         profesor = Profesor(
             nombre=nombre,
-            email=email
+            email=email,
+            institucion=institucion
         )
         profesor.set_password(password)
         

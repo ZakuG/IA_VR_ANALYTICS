@@ -6,6 +6,7 @@ Maneja todas las operaciones CRUD de sesiones
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 from models import db, Sesion
 
 
@@ -73,32 +74,64 @@ class SessionRepository:
     @staticmethod
     def get_by_estudiante(estudiante_id: int) -> List[Sesion]:
         """
-        Obtiene todas las sesiones de un estudiante
+        Obtiene todas las sesiones de un estudiante CON EAGER LOADING
+        Optimizado para evitar N+1 queries
         
         Args:
             estudiante_id: ID del estudiante
             
         Returns:
-            Lista de sesiones
+            Lista de sesiones con relaciones pre-cargadas
         """
-        return Sesion.query.filter_by(estudiante_id=estudiante_id)\
-                          .order_by(Sesion.fecha.desc())\
-                          .all()
+        return Sesion.query\
+                    .filter_by(estudiante_id=estudiante_id)\
+                    .options(joinedload(Sesion.estudiante))\
+                    .order_by(Sesion.fecha.desc())\
+                    .all()
     
     @staticmethod
     def get_by_profesor(profesor_id: int) -> List[Sesion]:
         """
-        Obtiene todas las sesiones evaluadas por un profesor
+        Obtiene todas las sesiones evaluadas por un profesor CON EAGER LOADING
+        Optimizado para evitar N+1 queries
         
         Args:
             profesor_id: ID del profesor
             
         Returns:
-            Lista de sesiones
+            Lista de sesiones con estudiante pre-cargado
         """
-        return Sesion.query.filter_by(profesor_id=profesor_id)\
-                          .order_by(Sesion.fecha.desc())\
-                          .all()
+        return Sesion.query\
+                    .filter_by(profesor_id=profesor_id)\
+                    .options(joinedload(Sesion.estudiante))\
+                    .order_by(Sesion.fecha.desc())\
+                    .all()
+    
+    @staticmethod
+    def count_by_profesor(profesor_id: int) -> int:
+        """
+        Cuenta rápidamente las sesiones de un profesor (para cache)
+        
+        Args:
+            profesor_id: ID del profesor
+            
+        Returns:
+            Número de sesiones
+        """
+        return Sesion.query.filter_by(profesor_id=profesor_id).count()
+    
+    @staticmethod
+    def count_by_estudiante(estudiante_id: int) -> int:
+        """
+        Cuenta rápidamente las sesiones de un estudiante (para cache)
+        
+        Args:
+            estudiante_id: ID del estudiante
+            
+        Returns:
+            Número de sesiones
+        """
+        return Sesion.query.filter_by(estudiante_id=estudiante_id).count()
     
     @staticmethod
     def get_by_maqueta(maqueta: str, profesor_id: Optional[int] = None) -> List[Sesion]:

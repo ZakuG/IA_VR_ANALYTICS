@@ -4,36 +4,67 @@ Encapsula toda la lógica de análisis y ML
 """
 
 from typing import Dict, List, Any, Optional
-from functools import wraps
+from functools import wraps, lru_cache
 import time
 import sys
 import os
 import pandas as pd
+import hashlib
+import pickle
 
 # Agregar el directorio raíz al path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from repositories.session_repository import SessionRepository
-from data_analytics import AnalizadorAvanzado
+# ✅ ARQUITECTURA MODULAR: Nuevo import desde package analytics
+from analytics import AnalizadorAvanzado
 
 
-# ========== CACHE SIMPLE ==========
-_cache = {}
+# ========== CACHE OPTIMIZADO CON HASH ==========
+_analytics_cache = {}
 
-def cache_result(ttl_seconds: int = 300):
-    """Decorador para cachear resultados (5 min por defecto)"""
+def get_cache_key(user_id: int, sesiones_count: int, prefix: str = "analytics") -> str:
+    """Genera una clave de cache basada en user_id y número de sesiones"""
+    return f"{prefix}_{user_id}_{sesiones_count}"
+
+def cache_analytics(ttl_seconds: int = 300):
+    """
+    Decorador optimizado para cachear analytics
+    Invalida automáticamente cuando hay nuevas sesiones
+    Funciona para profesores y estudiantes
+    """
     def decorator(func):
         @wraps(func)
-        def wrapper(*args, **kwargs):
-            cache_key = f"{func.__name__}_{args}_{kwargs}"
+        def wrapper(self, user_id: int, *args, **kwargs):
+            # Determinar si es profesor o estudiante según el nombre del método
+            func_name = func.__name__
             
-            if cache_key in _cache:
-                result, timestamp = _cache[cache_key]
+            if 'profesor' in func_name:
+                sesiones_count = self.session_repo.count_by_profesor(user_id)
+                prefix = "prof"
+            else:
+                sesiones_count = self.session_repo.count_by_estudiante(user_id)
+                prefix = "est"
+            
+            cache_key = get_cache_key(user_id, sesiones_count, prefix)
+            
+            # Verificar cache
+            if cache_key in _analytics_cache:
+                result, timestamp = _analytics_cache[cache_key]
                 if time.time() - timestamp < ttl_seconds:
+                    print(f"✅ CACHE HIT para {prefix} {user_id} ({sesiones_count} sesiones)")
                     return result
             
-            result = func(*args, **kwargs)
-            _cache[cache_key] = (result, time.time())
+            # Cache miss o expirado
+            print(f"❌ CACHE MISS - Calculando analytics para {prefix} {user_id}...")
+            inicio = time.time()
+            result = func(self, user_id, *args, **kwargs)
+            duracion = time.time() - inicio
+            
+            # Guardar en cache
+            _analytics_cache[cache_key] = (result, time.time())
+            print(f"✅ Analytics calculados en {duracion:.2f}s y guardados en cache")
+            
             return result
         return wrapper
     return decorator
@@ -46,7 +77,7 @@ class AnalyticsService:
         """Inicializa el servicio de analytics"""
         self.session_repo = SessionRepository()
     
-    @cache_result(ttl_seconds=300)  # Cache de 5 minutos
+    @cache_analytics(ttl_seconds=300)  # Cache de 5 minutos
     def get_analytics_profesor(self, profesor_id: int) -> Dict[str, Any]:
         """
         Obtiene análisis completo para un profesor
@@ -72,7 +103,6 @@ class AnalyticsService:
             'total_sesiones': len(sesiones),
             'estadisticas': analizador.estadisticas_descriptivas(),
             'visualizacion': analizador.datos_para_visualizacion(),
-            'clustering': analizador.clustering_estudiantes(),
             'prediccion': analizador.prediccion_rendimiento(),
             'correlaciones': analizador.correlaciones_avanzadas(),
             'estudiantes_riesgo': analizador.estudiantes_en_riesgo(),
@@ -84,9 +114,10 @@ class AnalyticsService:
             'ml_correlaciones': analizador.correlaciones_con_pvalues()
         }
     
+    @cache_analytics(ttl_seconds=300)  # Cache de 5 minutos
     def get_analytics_estudiante(self, estudiante_id: int) -> Dict[str, Any]:
         """
-        Obtiene análisis para un estudiante
+        Obtiene análisis para un estudiante CON CACHE
         
         Args:
             estudiante_id: ID del estudiante
@@ -94,6 +125,8 @@ class AnalyticsService:
         Returns:
             Diccionario con análisis del estudiante
         """
+        # Nota: El decorador @cache_analytics ya maneja el cache
+        # La key será: analytics_{estudiante_id}_{sesiones_count}
         sesiones = self.session_repo.get_by_estudiante(estudiante_id)
         
         if not sesiones:
@@ -104,7 +137,7 @@ class AnalyticsService:
                     'puntaje_promedio': 0,
                     'puntaje_maximo': 0,
                     'puntaje_minimo': 0,
-                    'tiempo_promedio_minutos': 0
+                    'tiempo_promedio_segundos': 0  # ✅ Cambiar a segundos
                 },
                 'por_maqueta': [],
                 'progreso_temporal': [],
@@ -171,13 +204,13 @@ class AnalyticsService:
         Returns:
             Dict con estadísticas base:
                 - total_sesiones
-                - estadisticas (puntaje_promedio, puntaje_maximo, puntaje_minimo, tiempo_promedio_minutos)
+                - estadisticas (puntaje_promedio, puntaje_maximo, puntaje_minimo, tiempo_promedio_segundos)
                 - por_maqueta (lista con estadísticas por maqueta)
                 - progreso_temporal (dict con progreso por maqueta)
         """
         # Estadísticas básicas
         puntajes = [s.puntaje for s in sesiones]
-        tiempos = [s.tiempo_segundos / 60 for s in sesiones]
+        tiempos = [s.tiempo_segundos for s in sesiones]  # ✅ Mantener en segundos
         
         # Agrupar por maqueta
         por_maqueta = {}
@@ -208,7 +241,7 @@ class AnalyticsService:
                 'puntaje_promedio': round(sum(puntajes) / len(puntajes), 2),
                 'puntaje_maximo': max(puntajes),
                 'puntaje_minimo': min(puntajes),
-                'tiempo_promedio_minutos': round(sum(tiempos) / len(tiempos), 2)
+                'tiempo_promedio_segundos': round(sum(tiempos) / len(tiempos), 2)  # ✅ Cambiar a segundos
             },
             'por_maqueta': self._agrupar_por_maqueta(por_maqueta),
             'progreso_temporal': progreso_por_maqueta
@@ -338,7 +371,7 @@ class AnalyticsService:
                     'puntaje_promedio': 0,
                     'puntaje_maximo': 0,
                     'puntaje_minimo': 0,
-                    'tiempo_promedio_minutos': 0
+                    'tiempo_promedio_segundos': 0  # ✅ Cambiar a segundos
                 },
                 'por_maqueta': [],
                 'progreso_temporal': [],

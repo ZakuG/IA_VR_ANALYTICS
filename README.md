@@ -13,7 +13,7 @@ Sistema web desarrollado en Flask para que profesores puedan registrarse y anali
 - **Identificación automática** de estudiantes en riesgo
 - **Análisis por maqueta** (Aire acondicionado, Motor, etc.)
 - **Insights automáticos** basados en los datos
-- **API REST** para integración con Unity/Meta Quest
+- **API REST**
 
 ## 📊 Análisis de Data Science Incluidos
 
@@ -34,22 +34,37 @@ Sistema web desarrollado en Flask para que profesores puedan registrarse y anali
 
 1. **Clonar o ubicarse en el directorio del proyecto**
 
-2. **Instalar dependencias**:
+2. **Crear y activar entorno virtual** (recomendado):
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+3. **Instalar dependencias**:
 ```powershell
 pip install -r requirements.txt
 ```
 
-3. **Generar datos de prueba** (opcional, para demostración):
+4. **Configurar variables de entorno**:
+   - Copia `.env.example` a `.env`
+   - Configura las variables necesarias
+
+5. **Inicializar base de datos** (si es necesario):
 ```powershell
-python generate_test_data.py
+python scripts/migrate_db.py
 ```
 
-4. **Ejecutar la aplicación**:
+6. **Generar datos de prueba** (opcional, para demostración):
+```powershell
+python scripts/generate_test_data.py
+```
+
+7. **Ejecutar la aplicación**:
 ```powershell
 python app.py
 ```
 
-5. **Abrir el navegador** en: http://localhost:5000
+8. **Abrir el navegador** en: http://localhost:5000
 
 ## 👤 Credenciales de Prueba
 
@@ -61,17 +76,63 @@ Si ejecutaste `generate_test_data.py`:
 
 ```
 Sonet_Version/
-├── app.py                  # Aplicación Flask principal
-├── data_analytics.py       # Módulo de análisis avanzado
-├── generate_test_data.py   # Script para generar datos de prueba
-├── requirements.txt        # Dependencias del proyecto
-├── instance/
-│   └── vr_analytics.db    # Base de datos SQLite (se crea automáticamente)
-└── templates/
-    ├── index.html         # Página de inicio
-    ├── login.html         # Página de login
-    ├── register.html      # Página de registro
-    └── dashboard.html     # Dashboard principal con análisis
+├── app.py                      # Aplicación Flask principal
+├── requirements.txt            # Dependencias del proyecto
+├── pyproject.toml             # Configuración del proyecto
+│
+├── models/                    # Modelos de datos (SQLAlchemy)
+│   ├── usuario.py
+│   ├── profesor.py
+│   ├── estudiante.py
+│   └── sesion.py
+│
+├── routes/                    # Rutas de la aplicación
+│   ├── auth_routes.py        # Autenticación
+│   ├── profesor_routes.py    # Endpoints de profesor
+│   ├── estudiante_routes.py  # Endpoints de estudiante
+│   └── api_routes.py         # API REST
+│
+├── services/                  # Lógica de negocio
+│   ├── auth_service.py
+│   ├── analytics_service.py
+│   └── ml_service.py
+│
+├── repositories/              # Acceso a datos
+│   ├── profesor_repository.py
+│   ├── estudiante_repository.py
+│   └── sesion_repository.py
+│
+├── static/                    # Archivos estáticos
+│   ├── css/                  # Estilos
+│   ├── js/                   # JavaScript
+│   └── images/               # Imágenes
+│
+├── templates/                 # Plantillas HTML
+│   ├── index.html
+│   ├── login.html
+│   ├── register.html
+│   ├── dashboard.html
+│   └── dashboard_estudiante.html
+│
+├── scripts/                   # Scripts de utilidad
+│   ├── README.md
+│   ├── generate_test_data.py
+│   ├── migrate_db.py
+│   ├── test_db_connection.py
+│   └── verificar_profesores.py
+│
+├── docs/                      # Documentación
+│   ├── ARQUITECTURA_SOFTWARE.md
+│   ├── ARQUITECTURA_AUTH.md
+│   ├── DIAGRAMAS_VISUALES.md
+│   └── PRESENTACION_EJECUTIVA.md
+│
+├── tests/                     # Pruebas unitarias
+├── logs/                      # Logs de la aplicación
+├── instance/                  # Base de datos
+│   └── vr_analytics.db
+│
+└── utils/                     # Utilidades generales
 ```
 
 ## 🔌 API

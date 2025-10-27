@@ -139,7 +139,8 @@ class AuthService:
             }
     
     def register_profesor(self, nombre: str, email: str, 
-                         password: str, confirm_password: str) -> Dict[str, Any]:
+                         password: str, confirm_password: str,
+                         institucion: Optional[str] = None) -> Dict[str, Any]:
         """
         Registra un nuevo profesor
         
@@ -148,6 +149,7 @@ class AuthService:
             email: Email único
             password: Contraseña
             confirm_password: Confirmación de contraseña
+            institucion: Institución educativa (opcional)
             
         Returns:
             Diccionario con resultado del registro
@@ -178,7 +180,7 @@ class AuthService:
             }
         
         try:
-            profesor = self.profesor_repo.create(nombre, email, password)
+            profesor = self.profesor_repo.create(nombre, email, password, institucion)
             
             return {
                 'success': True,
@@ -186,7 +188,8 @@ class AuthService:
                 'user': {
                     'id': profesor.id,
                     'nombre': profesor.nombre,
-                    'email': profesor.email
+                    'email': profesor.email,
+                    'institucion': profesor.institucion
                 }
             }
             
@@ -248,6 +251,6 @@ class AuthService:
             'id': p.id,
             'nombre': p.nombre,
             'email': p.email,
-            'institucion': p.institucion,
+            'institucion': p.institucion if p.institucion else 'Sin institución',
             'total_estudiantes': p.estudiantes.count()  # Usar .count() en lugar de len()
         } for p in profesores]

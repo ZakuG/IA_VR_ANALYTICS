@@ -38,10 +38,13 @@ def setup_logging(app):
         '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
     )
     
-    # Handler para consola
+    # Handler para consola con encoding UTF-8
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(log_level)
     console_handler.setFormatter(formatter)
+    # Forzar encoding UTF-8 en Windows para soportar emojis
+    if hasattr(console_handler.stream, 'reconfigure'):
+        console_handler.stream.reconfigure(encoding='utf-8', errors='replace')
     logger.addHandler(console_handler)
     
     # Handler para archivo (solo en producción)
@@ -54,7 +57,8 @@ def setup_logging(app):
         file_handler = RotatingFileHandler(
             'logs/vr_analytics.log',
             maxBytes=10240000,  # 10MB
-            backupCount=10
+            backupCount=10,
+            encoding='utf-8'  # Soporte UTF-8 en archivos de log
         )
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
