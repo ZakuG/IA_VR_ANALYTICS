@@ -73,7 +73,7 @@ Thumbs.db
 
 # Project specific
 app_backup.py
-test_*.py
+/test_*.py
 debug_*.py
 *.md
 
