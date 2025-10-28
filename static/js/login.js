@@ -1,5 +1,5 @@
 // ============================================
-// LOGIN.JS - Lógica específica de login
+// LOGIN.JS - Lógica específica de login con detección adaptativa
 // ============================================
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -12,14 +12,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         email: document.getElementById('email').value,
         password: document.getElementById('password').value
     };
-
-    // Agregar token de reCAPTCHA si está habilitado
-    if (typeof grecaptcha !== 'undefined') {
-        const recaptchaResponse = grecaptcha.getResponse();
-        if (recaptchaResponse) {
-            formData.recaptcha_token = recaptchaResponse;
-        }
-    }
 
     // Validaciones básicas
     if (!isValidEmail(formData.email)) {
@@ -34,6 +26,34 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         return;
     }
 
+    // ✨ NUEVO: Verificación adaptativa de reCAPTCHA
+    // Solo pide reCAPTCHA si detecta comportamiento sospechoso
+    const needsCaptcha = await shouldRequireCaptcha();
+    
+    if (needsCaptcha) {
+        // Mostrar widget de reCAPTCHA si estaba oculto
+        showCaptchaWidget();
+        
+        // Verificar que el usuario haya resuelto el captcha
+        if (typeof grecaptcha !== 'undefined') {
+            const recaptchaResponse = grecaptcha.getResponse();
+            if (!recaptchaResponse) {
+                showError('Por favor, completa la verificación de seguridad');
+                enableSubmitButton('submitBtn');
+                return;
+            }
+            formData.recaptcha_token = recaptchaResponse;
+        }
+    } else {
+        // Usuario legítimo detectado - ocultar captcha si estaba visible
+        hideCaptchaWidget();
+    }
+
+    // Agregar datos de comportamiento para análisis backend
+    if (typeof behaviorTracker !== 'undefined') {
+        formData.behavior_data = behaviorTracker.getBehaviorData();
+    }
+
     try {
         const data = await apiPost('/login', formData);
 
@@ -41,17 +61,17 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             showSuccess('Login exitoso! Redirigiendo...');
             redirectAfterDelay('/dashboard', 1000);
         } else {
-            showError(data.message || 'Error al iniciar sesión');
-            // Reset reCAPTCHA si falla
+            // Si falla, resetear reCAPTCHA y mostrarlo la próxima vez
             if (typeof grecaptcha !== 'undefined') {
                 grecaptcha.reset();
+                showCaptchaWidget(); // Mostrar captcha tras fallo
             }
+            showError(data.message || 'Error al iniciar sesión');
             enableSubmitButton('submitBtn');
         }
     } catch (error) {
         console.error('Error de conexión:', error);
         showError('Error de conexión. Intenta nuevamente.');
-        // Reset reCAPTCHA si hay error
         if (typeof grecaptcha !== 'undefined') {
             grecaptcha.reset();
         }

@@ -100,6 +100,25 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
 
     disableSubmitButton('submitBtn', 'Registrando...');
 
+    // 🤖 DETECCIÓN ADAPTATIVA: Verificar si es necesario mostrar reCAPTCHA
+    const needsCaptcha = await shouldRequireCaptcha();
+
+    if (needsCaptcha) {
+        showCaptchaWidget(); // Mostrar captcha dinámicamente
+        
+        // Validar que se haya completado el reCAPTCHA
+        if (typeof grecaptcha !== 'undefined') {
+            const recaptchaResponse = grecaptcha.getResponse();
+            if (!recaptchaResponse) {
+                showError('Por favor, completa la verificación de seguridad');
+                enableSubmitButton('submitBtn');
+                return;
+            }
+        }
+    } else {
+        hideCaptchaWidget(); // Ocultar para usuarios legítimos
+    }
+
     const tipoUsuario = document.querySelector('input[name="tipo_usuario"]:checked').value;
     
     const formData = {
@@ -109,12 +128,17 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
         password: password
     };
 
-    // Agregar token de reCAPTCHA si está habilitado
+    // Agregar token de reCAPTCHA si está presente
     if (typeof grecaptcha !== 'undefined') {
         const recaptchaResponse = grecaptcha.getResponse();
         if (recaptchaResponse) {
             formData.recaptcha_token = recaptchaResponse;
         }
+    }
+
+    // 🤖 Agregar datos de comportamiento para análisis backend
+    if (typeof behaviorTracker !== 'undefined') {
+        formData.behavior_data = behaviorTracker.getBehaviorData();
     }
 
     // Agregar campos específicos según tipo de usuario
@@ -152,6 +176,13 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             }, 3000);
         } else {
             showError(data.message || 'Error al registrarse');
+            
+            // 🤖 Si el error es por captcha, mostrar el widget
+            if (data.error === 'captcha_required') {
+                showCaptchaWidget();
+                showError('Se requiere verificación de seguridad. Por favor, completa el captcha.');
+            }
+            
             // Reset reCAPTCHA si falla
             if (typeof grecaptcha !== 'undefined') {
                 grecaptcha.reset();

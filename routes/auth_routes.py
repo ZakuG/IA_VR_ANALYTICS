@@ -29,7 +29,7 @@ from utils.constants import (
 from utils.logger import get_logger
 from utils.extensions import get_limiter
 from utils.rate_limiter import RATE_LIMITS
-from utils.recaptcha import recaptcha_required
+from utils.bot_detector import adaptive_captcha_required
 
 # Crear blueprint
 auth_bp = Blueprint('auth', __name__)
@@ -48,14 +48,14 @@ def index():
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
-@limiter.limit(RATE_LIMITS['register'])  # 🛡️ PROTECCIÓN: Solo 3 registros por hora por IP
-@recaptcha_required  # 🛡️ PROTECCIÓN: Validación reCAPTCHA
 def register():
     """
     Registro de usuarios (Profesor/Estudiante).
     
-    POST /register
-    Body (JSON):
+    GET /register - Muestra formulario de registro
+    POST /register - Crea nueva cuenta
+    
+    POST Body (JSON):
         {
             "tipo_usuario": "profesor" | "estudiante",
             "nombre": str,
@@ -66,10 +66,57 @@ def register():
         }
     
     Returns:
-        201 Created: Registro exitoso
-        400 Bad Request: Datos inválidos
+        200 OK: Formulario HTML (GET)
+        201 Created: Registro exitoso (POST)
+        400 Bad Request: Datos inválidos (POST)
+        429 Too Many Requests: Rate limit excedido (POST)
     """
+    # GET: Mostrar formulario (SIN rate limiting ni captcha)
+    if request.method == 'GET':
+        return render_template('register.html')
+    
+    # POST: Procesar registro (CON rate limiting y captcha adaptativo)
     if request.method == 'POST':
+        # 🛡️ RATE LIMITING: Aplicar manualmente solo a POST
+        @limiter.limit(RATE_LIMITS['register'])
+        def apply_rate_limit():
+            pass
+        
+        try:
+            apply_rate_limit()
+        except Exception as e:
+            # Si excede rate limit, retornar error
+            logger.warning(f"⚠️ Rate limit excedido en registro - IP: {request.remote_addr}")
+            return jsonify({
+                'success': False,
+                'message': 'Demasiadas solicitudes. Por favor, intenta más tarde.',
+                'error': 'rate_limit_exceeded',
+                'retry_after': RATE_LIMITS['register']
+            }), 429
+        
+        # 🤖 CAPTCHA ADAPTATIVO: Validar solo si es sospechoso
+        from utils.bot_detector import BotDetector
+        from flask import current_app
+        
+        BotDetector.record_request()
+        analysis = BotDetector.is_suspicious()
+        
+        if analysis['suspicious']:
+            current_app.logger.warning(f"🤖 Registro sospechoso (score: {analysis['score']})")
+            
+            recaptcha = current_app.extensions.get('recaptcha')
+            if not recaptcha or not recaptcha.verify():
+                BotDetector.record_failure()
+                return jsonify({
+                    'error': 'captcha_required',
+                    'message': 'Verificación de seguridad requerida',
+                    'score': analysis['score']
+                }), HTTP_BAD_REQUEST
+            
+            BotDetector.clear_failures()
+        else:
+            current_app.logger.info(f"✅ Registro legítimo (score: {analysis['score']})")
+        
         data = request.json
         logger.debug(f"Registro - Tipo: {data.get('tipo_usuario')}, Email: {data.get('email')}")
         
@@ -127,19 +174,17 @@ def register():
                 'success': False,
                 'message': f'Error en registro: {str(e)}'
             }), HTTP_BAD_REQUEST
-    
-    return render_template('register.html')
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
-@limiter.limit(RATE_LIMITS['login'])  # 🛡️ PROTECCIÓN: Máximo 10 intentos por minuto
-@recaptcha_required  # 🛡️ PROTECCIÓN: Validación reCAPTCHA
 def login():
     """
     Login de usuarios (Profesor/Estudiante).
     
-    POST /login
-    Body (JSON):
+    GET /login - Muestra formulario de login
+    POST /login - Valida credenciales
+    
+    POST Body (JSON):
         {
             "email": str (profesores),
             "codigo": str (estudiantes),
@@ -147,10 +192,56 @@ def login():
         }
     
     Returns:
-        200 OK: Login exitoso
-        401 Unauthorized: Credenciales inválidas
+        200 OK: Formulario HTML (GET) o Login exitoso (POST)
+        401 Unauthorized: Credenciales inválidas (POST)
+        429 Too Many Requests: Rate limit excedido (POST)
     """
+    # GET: Mostrar formulario (SIN rate limiting ni captcha)
+    if request.method == 'GET':
+        return render_template('login.html')
+    
+    # POST: Procesar login (CON rate limiting y captcha adaptativo)
     if request.method == 'POST':
+        # 🛡️ RATE LIMITING: Aplicar manualmente solo a POST
+        @limiter.limit(RATE_LIMITS['login'])
+        def apply_rate_limit():
+            pass
+        
+        try:
+            apply_rate_limit()
+        except Exception as e:
+            # Si excede rate limit, retornar error
+            logger.warning(f"⚠️ Rate limit excedido en login - IP: {request.remote_addr}")
+            return jsonify({
+                'success': False,
+                'message': 'Demasiadas solicitudes. Por favor, intenta más tarde.',
+                'error': 'rate_limit_exceeded',
+                'retry_after': RATE_LIMITS['login']
+            }), 429
+        
+        # 🤖 CAPTCHA ADAPTATIVO: Validar solo si es sospechoso
+        from utils.bot_detector import BotDetector
+        from flask import current_app
+        
+        BotDetector.record_request()
+        analysis = BotDetector.is_suspicious()
+        
+        if analysis['suspicious']:
+            current_app.logger.warning(f"🤖 Login sospechoso (score: {analysis['score']})")
+            
+            recaptcha = current_app.extensions.get('recaptcha')
+            if not recaptcha or not recaptcha.verify():
+                BotDetector.record_failure()
+                return jsonify({
+                    'error': 'captcha_required',
+                    'message': 'Verificación de seguridad requerida',
+                    'score': analysis['score']
+                }), HTTP_BAD_REQUEST
+            
+            BotDetector.clear_failures()
+        else:
+            current_app.logger.info(f"✅ Login legítimo (score: {analysis['score']})")
+        
         data = request.json
         logger.debug(f"Login - Email/Código: {data.get('email') or data.get('codigo')}")
         
@@ -200,8 +291,6 @@ def login():
             'success': False,
             'message': MSG_ERROR_AUTENTICACION
         }), HTTP_UNAUTHORIZED
-    
-    return render_template('login.html')
 
 
 @auth_bp.route('/logout')
