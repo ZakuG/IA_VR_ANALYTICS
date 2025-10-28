@@ -14,7 +14,6 @@ Patrón: MVC con Service Layer
 
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for
 from flask_login import login_user, logout_user, current_user
-from flask_recaptcha import ReCaptcha
 import pandas as pd
 from datetime import datetime
 import os
