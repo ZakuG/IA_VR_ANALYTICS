@@ -24,6 +24,9 @@ scikit-learn==1.5.2
 # Utilities
 python-dotenv==1.0.1
 
+# Production Server
+gunicorn==21.2.0
+
 # Testing dependencies
 pytest==8.4.2
 pytest-cov==7.0.0
