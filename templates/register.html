@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro - VR Analytics</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    {% if config.RECAPTCHA_ENABLED %}
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    {% endif %}
 </head>
 <body>
     <div class="register-container">
@@ -80,6 +83,12 @@
                 <label for="confirmPassword">Confirmar Contrasena</label>
                 <input type="password" id="confirmPassword" name="confirmPassword" required>
             </div>
+
+            {% if config.RECAPTCHA_ENABLED %}
+            <div class="form-group" style="display: flex; justify-content: center; margin: 20px 0;">
+                <div class="g-recaptcha" data-sitekey="{{ config.RECAPTCHA_SITE_KEY }}"></div>
+            </div>
+            {% endif %}
 
             <button type="submit" class="btn" id="submitBtn">Registrarse</button>
         </form>

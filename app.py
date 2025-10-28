@@ -2,6 +2,7 @@
 from flask import Flask
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_recaptcha import ReCaptcha
 import os
 from dotenv import load_dotenv
 
@@ -16,6 +17,8 @@ from routes import register_blueprints
 
 # Importar utilidades
 from utils.logger import setup_logging
+from utils.rate_limiter import get_limiter_config, rate_limit_exceeded_handler
+from utils.extensions import init_limiter
 
 # ============================================
 # CONFIGURACIÓN DE FLASK
@@ -59,6 +62,15 @@ app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', os.getenv('MAIL_USERNAME'))
 
+# Configuración de reCAPTCHA
+app.config['RECAPTCHA_ENABLED'] = os.getenv('RECAPTCHA_ENABLED', 'False').lower() == 'true'
+app.config['RECAPTCHA_SITE_KEY'] = os.getenv('RECAPTCHA_SITE_KEY', '')
+app.config['RECAPTCHA_SECRET_KEY'] = os.getenv('RECAPTCHA_SECRET_KEY', '')
+app.config['RECAPTCHA_THEME'] = 'light'
+app.config['RECAPTCHA_TYPE'] = 'image'
+app.config['RECAPTCHA_SIZE'] = 'normal'
+app.config['RECAPTCHA_RTABINDEX'] = 10
+
 # ============================================
 # INICIALIZAR EXTENSIONES
 # ============================================
@@ -70,6 +82,16 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'auth.login'  # ← Actualizado para usar blueprint
 
 mail = Mail(app)
+
+# Inicializar reCAPTCHA
+recaptcha = ReCaptcha(app)
+
+# Configurar Rate Limiting
+limiter_config = get_limiter_config()
+limiter = init_limiter(app, limiter_config)
+
+# Handler para cuando se excede el límite
+app.errorhandler(429)(rate_limit_exceeded_handler)
 
 # Configurar logging
 logger = setup_logging(app)

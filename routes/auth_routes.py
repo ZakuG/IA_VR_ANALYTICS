@@ -14,6 +14,7 @@ Patrón: MVC con Service Layer
 
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for
 from flask_login import login_user, logout_user, current_user
+from flask_recaptcha import ReCaptcha
 import pandas as pd
 from datetime import datetime
 import os
@@ -27,10 +28,15 @@ from utils.constants import (
     MSG_ERROR_AUTENTICACION, ROLE_PROFESOR, ROLE_ESTUDIANTE
 )
 from utils.logger import get_logger
+from utils.extensions import get_limiter
+from utils.rate_limiter import RATE_LIMITS
 
 # Crear blueprint
 auth_bp = Blueprint('auth', __name__)
 logger = get_logger(__name__)
+
+# Obtener limiter
+limiter = get_limiter()
 
 
 @auth_bp.route('/')
@@ -42,6 +48,7 @@ def index():
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
+@limiter.limit(RATE_LIMITS['register'])  # 🛡️ PROTECCIÓN: Solo 3 registros por hora por IP
 def register():
     """
     Registro de usuarios (Profesor/Estudiante).
@@ -64,6 +71,17 @@ def register():
     if request.method == 'POST':
         data = request.json
         logger.debug(f"Registro - Tipo: {data.get('tipo_usuario')}, Email: {data.get('email')}")
+        
+        # 🛡️ VALIDACIÓN reCAPTCHA (si está habilitado)
+        from flask import current_app
+        if current_app.config.get('RECAPTCHA_ENABLED', False):
+            recaptcha = current_app.extensions.get('recaptcha')
+            if recaptcha and not recaptcha.verify():
+                logger.warning(f"Intento de registro con reCAPTCHA inválido - IP: {request.remote_addr}")
+                return jsonify({
+                    'success': False,
+                    'message': 'Por favor, completa el reCAPTCHA correctamente'
+                }), HTTP_BAD_REQUEST
         
         tipo_usuario = data.get('tipo_usuario', 'profesor')
         auth_service = AuthService()
@@ -124,6 +142,7 @@ def register():
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit(RATE_LIMITS['login'])  # 🛡️ PROTECCIÓN: Máximo 10 intentos por minuto
 def login():
     """
     Login de usuarios (Profesor/Estudiante).
@@ -143,6 +162,17 @@ def login():
     if request.method == 'POST':
         data = request.json
         logger.debug(f"Login - Email/Código: {data.get('email') or data.get('codigo')}")
+        
+        # 🛡️ VALIDACIÓN reCAPTCHA (si está habilitado)
+        from flask import current_app
+        if current_app.config.get('RECAPTCHA_ENABLED', False):
+            recaptcha = current_app.extensions.get('recaptcha')
+            if recaptcha and not recaptcha.verify():
+                logger.warning(f"Intento de login con reCAPTCHA inválido - IP: {request.remote_addr}")
+                return jsonify({
+                    'success': False,
+                    'message': 'Por favor, completa el reCAPTCHA correctamente'
+                }), HTTP_UNAUTHORIZED
         
         auth_service = AuthService()
         
