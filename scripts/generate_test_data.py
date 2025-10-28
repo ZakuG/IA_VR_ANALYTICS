@@ -4,7 +4,14 @@ Script para generar datos de prueba para el sistema VR Analytics
 Configurado para PostgreSQL con Supabase
 """
 
-from app import app, db, Profesor, Estudiante, Sesion
+import sys
+import os
+
+# Agregar el directorio raíz al path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app import app, db
+from models import Profesor, Estudiante, Sesion
 from flask_bcrypt import Bcrypt
 import random
 from datetime import datetime, timedelta

@@ -3,6 +3,12 @@ Script para agregar índices a la base de datos PostgreSQL
 Esto mejorará significativamente la velocidad de las consultas
 """
 
+import sys
+import os
+
+# Agregar el directorio raíz al path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from app import app, db
 from models import Sesion, Estudiante, Profesor
 from sqlalchemy import text

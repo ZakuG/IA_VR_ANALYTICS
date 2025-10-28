@@ -41,7 +41,8 @@ class InsightsGenerator:
         
         # Análisis de variabilidad
         std_puntaje = self.df['puntaje'].std()
-        if std_puntaje > 1.5:
+        # Manejar NaN cuando solo hay 1 sesión
+        if pd.notna(std_puntaje) and std_puntaje > 1.5:
             insights.append({
                 'tipo': 'atencion',
                 'mensaje': f'📊 Alta variabilidad en puntajes (σ={round(std_puntaje, 2)}). '

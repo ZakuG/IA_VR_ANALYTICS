@@ -25,14 +25,21 @@ class EstadisticasAnalyzer:
         
         tasa_aprob = (self.df['puntaje'] >= 4).sum() / len(self.df) * 100
         
+        # Manejar desviación estándar con 1 sola sesión (retorna NaN)
+        std_puntaje = self.df['puntaje'].std()
+        desviacion_puntaje = 0.0 if pd.isna(std_puntaje) else float(round(std_puntaje, 2))
+        
+        var_puntaje = self.df['puntaje'].var()
+        varianza_puntaje = 0.0 if pd.isna(var_puntaje) else float(round(var_puntaje, 2))
+        
         stats_dict = {
             'general': {
                 'total_sesiones': int(len(self.df)),
                 'total_estudiantes': int(self.df['estudiante_id'].nunique()),
                 'promedio_puntaje': float(round(self.df['puntaje'].mean(), 2)),
                 'mediana_puntaje': float(self.df['puntaje'].median()),
-                'desviacion_puntaje': float(round(self.df['puntaje'].std(), 2)),
-                'varianza_puntaje': float(round(self.df['puntaje'].var(), 2)),
+                'desviacion_puntaje': desviacion_puntaje,
+                'varianza_puntaje': varianza_puntaje,
                 'promedio_tiempo_segundos': float(round(self.df['tiempo_segundos'].mean(), 2)),
                 'mediana_tiempo_segundos': float(round(self.df['tiempo_segundos'].median(), 2)),
                 'tasa_aprobacion': float(round(tasa_aprob, 2)),
@@ -71,6 +78,10 @@ class EstadisticasAnalyzer:
             total = int(row[('puntaje', 'count')])
             promedio = float(row[('puntaje', 'mean')])
             
+            # Manejar desviación estándar con 1 sola sesión (retorna NaN)
+            std_puntaje = row[('puntaje', 'std')]
+            desviacion = 0.0 if pd.isna(std_puntaje) else round(float(std_puntaje), 2)
+            
             # Calcular tasa de aprobación para esta maqueta
             mask = self.df['maqueta'] == maqueta
             tasa_aprobacion = (self.df.loc[mask, 'puntaje'] >= 4).sum() / total * 100
@@ -79,7 +90,7 @@ class EstadisticasAnalyzer:
                 'total_intentos': total,
                 'promedio_puntaje': round(promedio, 2),
                 'mediana_puntaje': float(row[('puntaje', 'median')]),
-                'desviacion_puntaje': round(float(row[('puntaje', 'std')]), 2),
+                'desviacion_puntaje': desviacion,
                 'promedio_tiempo_segundos': round(float(row[('tiempo_segundos', 'mean')]), 2),
                 'tasa_aprobacion': round(tasa_aprobacion, 2),
                 'promedio_interacciones_ia': round(float(row[('interacciones_ia', 'mean')]), 2),
