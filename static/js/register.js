@@ -109,6 +109,14 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
         password: password
     };
 
+    // Agregar token de reCAPTCHA si está habilitado
+    if (typeof grecaptcha !== 'undefined') {
+        const recaptchaResponse = grecaptcha.getResponse();
+        if (recaptchaResponse) {
+            formData.recaptcha_token = recaptchaResponse;
+        }
+    }
+
     // Agregar campos específicos según tipo de usuario
     if (tipoUsuario === 'profesor') {
         formData.institucion = document.getElementById('institucion').value;
@@ -144,10 +152,18 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             }, 3000);
         } else {
             showError(data.message || 'Error al registrarse');
+            // Reset reCAPTCHA si falla
+            if (typeof grecaptcha !== 'undefined') {
+                grecaptcha.reset();
+            }
             enableSubmitButton('submitBtn');
         }
     } catch (error) {
         showError('Error de conexión. Intenta nuevamente.');
+        // Reset reCAPTCHA si hay error
+        if (typeof grecaptcha !== 'undefined') {
+            grecaptcha.reset();
+        }
         enableSubmitButton('submitBtn');
     }
 });
