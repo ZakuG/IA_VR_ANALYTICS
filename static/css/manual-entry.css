@@ -245,7 +245,7 @@ input[type="range"]::-moz-range-thumb:hover {
     font-size: 20px;
     font-weight: bold;
     text-align: center;
-    color: #667eea;
+    color: #999;
     transition: all 0.3s ease;
     height: 52px;
     box-sizing: border-box;
@@ -270,7 +270,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .tiempo-separator {
     font-size: 32px;
     font-weight: bold;
-    color: #667eea;
+    color: #999;
     margin: 0 5px;
 }
 
