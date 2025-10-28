@@ -2,7 +2,6 @@
 from flask import Flask
 from flask_login import LoginManager
 from flask_mail import Mail
-from flask_recaptcha import ReCaptcha
 import os
 from dotenv import load_dotenv
 
@@ -19,6 +18,7 @@ from routes import register_blueprints
 from utils.logger import setup_logging
 from utils.rate_limiter import get_limiter_config, rate_limit_exceeded_handler
 from utils.extensions import init_limiter
+from utils.recaptcha import ReCaptcha
 
 # ============================================
 # CONFIGURACIÓN DE FLASK
