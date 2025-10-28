@@ -28,8 +28,10 @@
             </div>
 
             {% if config.RECAPTCHA_ENABLED %}
-            <div class="form-group" style="display: flex; justify-content: center; margin: 20px 0;">
-                <div class="g-recaptcha" data-sitekey="{{ config.RECAPTCHA_SITE_KEY }}"></div>
+            <!-- 🤖 reCAPTCHA ADAPTATIVO: Solo se muestra si detecta comportamiento sospechoso -->
+            <div id="captcha-container" style="display: none; margin: 0px 0; text-align: center;">
+
+                <div class="g-recaptcha" data-sitekey="{{ config.RECAPTCHA_SITE_KEY }}" style="display: inline-block;"></div>
             </div>
             {% endif %}
 
@@ -45,6 +47,8 @@
         </div>
     </div>
 
+    <!-- 🤖 Scripts de detección de comportamiento -->
+    <script src="{{ url_for('static', filename='js/bot-detection.js') }}"></script>
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
     <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>

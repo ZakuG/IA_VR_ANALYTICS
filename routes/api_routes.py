@@ -28,6 +28,7 @@ from utils.constants import (
     HTTP_OK, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_FORBIDDEN
 )
 from utils.logger import get_logger
+from utils.bot_detector import BotDetector
 from sqlalchemy import func
 
 # Crear blueprint
@@ -496,3 +497,99 @@ def regresion_multiple():
             'success': False,
             'message': f'Error al calcular regresión: {str(e)}'
         }), HTTP_OK
+
+
+# ========================================
+# 🤖 BOT DETECTION ENDPOINTS
+# ========================================
+
+@api_bp.route('/js-enabled', methods=['POST'])
+def js_enabled():
+    """
+    Marca que JavaScript está habilitado en el navegador.
+    
+    POST /api/js-enabled
+    
+    Este endpoint es llamado automáticamente por bot-detection.js
+    para indicar que el cliente tiene JavaScript funcional.
+    
+    Returns:
+        200 OK: {'success': True}
+    """
+    BotDetector.mark_js_enabled()
+    logger.debug(f"JavaScript habilitado - IP: {request.remote_addr}")
+    return jsonify({'success': True}), HTTP_OK
+
+
+@api_bp.route('/form-start', methods=['POST'])
+def form_start():
+    """
+    Marca el inicio del llenado de formulario.
+    
+    POST /api/form-start
+    
+    Este endpoint es llamado cuando el usuario comienza a interactuar
+    con el formulario, para medir la velocidad de llenado.
+    
+    Returns:
+        200 OK: {'success': True}
+    """
+    BotDetector.mark_form_start()
+    logger.debug(f"Formulario iniciado - IP: {request.remote_addr}")
+    return jsonify({'success': True}), HTTP_OK
+
+
+@api_bp.route('/captcha-check', methods=['POST'])
+def captcha_check():
+    """
+    Determina si debe mostrar reCAPTCHA basado en análisis de comportamiento.
+    
+    POST /api/captcha-check
+    Body (opcional):
+        {
+            "behavior_data": {
+                "mouse_movements": int,
+                "keystrokes": int,
+                "time_spent": float,
+                "focus_events": int,
+                "scroll_events": int
+            }
+        }
+    
+    Este endpoint combina análisis backend (User-Agent, timing, frequency)
+    con datos de comportamiento frontend opcionales.
+    
+    Returns:
+        200 OK: {
+            'show_captcha': bool,
+            'score': int,
+            'reason': str (opcional)
+        }
+    """
+    data = request.json or {}
+    behavior_data = data.get('behavior_data', {})
+    
+    # Análisis backend principal
+    analysis = BotDetector.is_suspicious()
+    
+    # Log para debugging
+    if analysis['require_captcha']:
+        logger.warning(
+            f"🤖 Bot detectado - IP: {request.remote_addr}, "
+            f"Score: {analysis['score']}, "
+            f"Reasons: {analysis.get('reasons', [])}"
+        )
+    else:
+        logger.info(
+            f"✅ Usuario legítimo - IP: {request.remote_addr}, "
+            f"Score: {analysis['score']}"
+        )
+    
+    # Opcional: Ajustar score basado en behavior_data del frontend
+    # (Esta es una mejora futura - actualmente solo usa backend analysis)
+    
+    return jsonify({
+        'show_captcha': analysis['require_captcha'],
+        'score': analysis['score'],
+        'reason': 'Verificación de seguridad requerida' if analysis['require_captcha'] else None
+    }), HTTP_OK
