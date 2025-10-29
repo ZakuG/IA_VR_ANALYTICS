@@ -1,0 +1,65 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  deploy-staging:
+    name: Deploy to Railway/Render (Staging)
+    runs-on: ubuntu-latest
+    # Uncomment when GitHub environment is configured:
+    # environment:
+    #   name: staging
+    #   url: ${{ steps.deploy.outputs.url }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Run tests before deployment
+      working-directory: ./backend
+      env:
+        TEST_DATABASE_URL: "sqlite:///:memory:"
+        SECRET_KEY: "test-secret-key"
+        FLASK_ENV: "testing"
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-flask
+        pytest tests/unit/test_models.py tests/integration/ -v --cov-fail-under=78
+        
+    # Uncomment when Railway is configured
+    # - name: Deploy to Railway
+    #   id: deploy
+    #   env:
+    #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    #   run: |
+    #     npm install -g @railway/cli
+    #     railway link ${{ secrets.RAILWAY_PROJECT_ID }}
+    #     railway up
+    #     echo "url=https://your-app.railway.app" >> $GITHUB_OUTPUT
+        
+    # Alternative: Render.com deployment
+    # - name: Deploy to Render
+    #   id: deploy
+    #   uses: johnbeynon/render-deploy-action@v0.0.8
+    #   with:
+    #     service-id: ${{ secrets.RENDER_SERVICE_ID }}
+    #     api-key: ${{ secrets.RENDER_API_KEY }}
+        
+    - name: Deployment placeholder
+      id: deploy
+      run: |
+        echo "✅ Tests passed! Ready for deployment."
+        echo "📝 Configure Railway or Render secrets to enable automatic deployment."
+        echo "url=pending-configuration" >> $GITHUB_OUTPUT
