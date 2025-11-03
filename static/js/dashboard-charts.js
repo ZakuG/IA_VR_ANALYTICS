@@ -51,7 +51,7 @@ function displayMLClasificacion(ml_data) {
         </div>
         
         <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-            <h4 style="color: #667eea; margin-bottom: 15px;">📈 Importancia de Características (Random Forest)</h4>
+            <h4 style="color: #667eea; margin-bottom: 15px;">📈 Importancia de Características</h4>
             <div style="margin-bottom: 10px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                     <span>⏱️ Tiempo (segundos)</span>

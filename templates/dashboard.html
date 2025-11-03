@@ -45,7 +45,7 @@
             <div class="header-buttons">
                 <button class="btn btn-primary" onclick="refreshData()">🔄 Actualizar Datos</button>
                 <button class="btn btn-primary" onclick="verResultadosPorMaqueta()">📊 Ver por Maqueta</button>
-                <a style="text-align: center;" href="/dashboard/manual-entry" class="btn btn-secondary">📝 Registro Manual</a>
+                <a style="text-align: center;" href="/dashboard/manual-entry" class="btn btn-secondary">📝 Registro de Sesión</a>
                 <button class="btn btn-logout" onclick="confirmLogout()">🚪 Cerrar Sesión</button>
             </div>
         </div>
@@ -135,10 +135,12 @@
             </div>
 
             <!-- NUEVOS MÓDULOS ML PROFESIONALES -->
-            <!-- Clasificación Binaria -->
+
+            <!-- Correlaciones con P-Values -->
             <div class="chart-card" style="margin-bottom: 20px;">
-                <h3>🤖 Predicción de Aprobación</h3>
-                <div id="ml-clasificacion"></div>
+                <h3>🔬 Correlaciones Estadísticas Avanzadas</h3>
+                <div id="ml-correlaciones"></div>
+                <div id="correlation-content"></div>
             </div>
 
             <!-- K-Means Profesional -->
@@ -147,11 +149,10 @@
                 <div id="ml-clustering"></div>
             </div>
 
-            <!-- Correlaciones con P-Values -->
+            <!-- Clasificación Binaria -->
             <div class="chart-card" style="margin-bottom: 20px;">
-                <h3>🔬 Correlaciones Estadísticas Avanzadas</h3>
-                <div id="ml-correlaciones"></div>
-                <div id="correlation-content"></div>
+                <h3>🤖 Predicción de Aprobación</h3>
+                <div id="ml-clasificacion"></div>
             </div>
 
             <!-- Estudiantes en Riesgo -->
