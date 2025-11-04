@@ -11,9 +11,9 @@ from flask_limiter.util import get_remote_address
 # Configuración de límites por ruta
 RATE_LIMITS = {
     # Rutas de autenticación (más restrictivas)
-    'register': "3 per hour",  # Máximo 3 registros por hora por IP
-    'login': "10 per minute",  # Máximo 10 intentos de login por minuto
-    'forgot_password': "3 per hour",  # Máximo 3 solicitudes de recuperación por hora
+    'register': "10 per hour",  # Aumentado temporalmente para desarrollo (era: 3 per hour)
+    'login': "30 per minute",  # Aumentado temporalmente para desarrollo (era: 10 per minute)
+    'forgot_password': "10 per hour",  # Aumentado temporalmente para desarrollo (era: 3 per hour)
     
     # Rutas del dashboard (más permisivas)
     'dashboard': "100 per minute",
@@ -24,7 +24,8 @@ RATE_LIMITS = {
 }
 
 # Límites por defecto para toda la aplicación
-DEFAULT_LIMITS = ["200 per day", "50 per hour"]
+# DESARROLLO: Límites aumentados temporalmente para pruebas
+DEFAULT_LIMITS = ["800 per day", "250 per hour"]  # ← Aumentado 10x para desarrollo
 
 # Mensajes de error personalizados
 RATE_LIMIT_MESSAGES = {
