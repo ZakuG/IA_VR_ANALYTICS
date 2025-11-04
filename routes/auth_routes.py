@@ -320,46 +320,102 @@ def forgot_password():
     
     Returns:
         200 OK: Correo enviado (o mensaje genérico por seguridad)
+    
+    Nota: Implementa manejo robusto de errores para evitar 502 en producción
     """
     if request.method == 'POST':
-        data = request.json
-        email = data.get('email')
-        
-        # Buscar usuario (profesor o estudiante)
-        profesor = Profesor.query.filter_by(email=email).first()
-        estudiante = Estudiante.query.filter_by(email=email).first()
-        usuario = profesor or estudiante
-        
-        if usuario:
-            # Generar token seguro
-            token = secrets.token_urlsafe(32)
-            usuario.reset_token = token
-            usuario.reset_token_expiry = datetime.utcnow() + pd.Timedelta(hours=1)
-            db.session.commit()
+        try:
+            data = request.json
+            email = data.get('email')
             
-            # Generar enlace de recuperación
-            base_url = os.getenv('APP_BASE_URL', 'http://127.0.0.1:5000')
-            reset_link = f"{base_url}/reset-password/{token}"
+            # Validación básica
+            if not email or '@' not in email:
+                return jsonify({
+                    'success': False,
+                    'message': 'Email inválido'
+                }), HTTP_BAD_REQUEST
             
-            # Enviar correo
-            from flask import current_app
-            email_service = EmailService(mail_instance=current_app.extensions['mail'])
-            resultado_email = email_service.send_password_reset_email(
-                email=email,
-                reset_link=reset_link,
-                nombre=usuario.nombre
-            )
+            # Buscar usuario (profesor o estudiante)
+            profesor = Profesor.query.filter_by(email=email).first()
+            estudiante = Estudiante.query.filter_by(email=email).first()
+            usuario = profesor or estudiante
             
-            if resultado_email['success']:
-                logger.info(f"Correo recuperación enviado a {email}")
+            if usuario:
+                try:
+                    # Generar token seguro
+                    token = secrets.token_urlsafe(32)
+                    usuario.reset_token = token
+                    usuario.reset_token_expiry = datetime.utcnow() + pd.Timedelta(hours=1)
+                    db.session.commit()
+                    
+                    # Generar enlace de recuperación con detección automática de entorno
+                    # En producción: usa APP_BASE_URL o detecta desde request
+                    # En desarrollo: usa localhost
+                    base_url = os.getenv('APP_BASE_URL')
+                    
+                    if not base_url:
+                        # Auto-detectar URL desde la request (funciona en desarrollo y producción)
+                        base_url = request.url_root.rstrip('/')
+                        logger.info(f"🔍 Base URL auto-detectada: {base_url}")
+                    
+                    # Asegurar HTTPS en producción
+                    if 'render.com' in base_url or 'herokuapp.com' in base_url:
+                        base_url = base_url.replace('http://', 'https://')
+                        logger.info(f"🔒 Forzando HTTPS en producción: {base_url}")
+                    
+                    reset_link = f"{base_url}/reset-password/{token}"
+                    logger.info(f"📧 Link de recuperación generado: {reset_link}")
+                    
+                    # Enviar correo con timeout y manejo de errores
+                    from flask import current_app
+                    
+                    # Verificar que el servicio de correo esté configurado
+                    if 'mail' not in current_app.extensions:
+                        logger.error("❌ Servicio de correo no configurado en producción")
+                        # Retornar éxito genérico pero logear el error
+                        return jsonify({
+                            'success': True,
+                            'message': 'Si el email existe, recibirás instrucciones para recuperar tu contraseña'
+                        }), HTTP_OK
+                    
+                    email_service = EmailService(mail_instance=current_app.extensions['mail'])
+                    
+                    # Intentar enviar correo con timeout implícito
+                    resultado_email = email_service.send_password_reset_email(
+                        email=email,
+                        reset_link=reset_link,
+                        nombre=usuario.nombre
+                    )
+                    
+                    if resultado_email['success']:
+                        logger.info(f"✅ Correo recuperación enviado a {email}")
+                    else:
+                        logger.warning(f"⚠️ Error enviando correo a {email}: {resultado_email['message']}")
+                        # No fallar - el token ya está guardado, usuario puede intentar de nuevo
+                    
+                except Exception as email_error:
+                    # Error al enviar correo - NO romper el flujo
+                    logger.error(f"❌ Excepción al procesar correo para {email}: {str(email_error)}")
+                    # El token ya está en BD, continuar
             else:
-                logger.error(f"Error enviando correo a {email}: {resultado_email['message']}")
-        
-        # Por seguridad, siempre retornar éxito
-        return jsonify({
-            'success': True,
-            'message': 'Si el email existe, recibirás instrucciones para recuperar tu contraseña'
-        })
+                logger.info(f"🔍 Email no encontrado en sistema: {email}")
+            
+            # Por seguridad, SIEMPRE retornar éxito (no revelar si email existe)
+            return jsonify({
+                'success': True,
+                'message': 'Si el email existe, recibirás instrucciones para recuperar tu contraseña'
+            }), HTTP_OK
+            
+        except Exception as e:
+            # Error general - loguear y retornar error genérico
+            logger.error(f"❌ Error en forgot_password: {str(e)}")
+            import traceback
+            logger.debug(traceback.format_exc())
+            
+            return jsonify({
+                'success': False,
+                'message': 'Error al procesar la solicitud. Por favor, intenta más tarde.'
+            }), 500
     
     return render_template('forgot_password.html')
 

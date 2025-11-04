@@ -96,6 +96,20 @@ app.errorhandler(429)(rate_limit_exceeded_handler)
 # Configurar logging
 logger = setup_logging(app)
 
+# Validar configuración de email al inicio
+from utils.email_validator import validate_email_config
+email_config = validate_email_config()
+if not email_config['configured']:
+    logger.warning("⚠️ Servicio de correo NO configurado correctamente:")
+    for error in email_config['errors']:
+        logger.warning(f"  - {error}")
+    logger.warning("  → Funcionalidad de recuperación de contraseña estará limitada")
+else:
+    logger.info("✅ Servicio de correo configurado correctamente")
+    if email_config['warnings']:
+        for warning in email_config['warnings']:
+            logger.info(f"  ℹ️ {warning}")
+
 # ============================================
 # FLASK-LOGIN USER LOADER
 # ============================================

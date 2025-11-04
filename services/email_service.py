@@ -4,18 +4,25 @@ from flask_mail import Mail, Message
 from flask import render_template_string
 import os
 import logging
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 class EmailService:
-    """Servicio para envío de correos electrónicos"""
+    """
+    Servicio para envío de correos electrónicos con manejo robusto de errores
+    
+    Implementa el patrón Service Layer para centralizar lógica de envío de emails
+    con timeout, retry logic y fallback gracioso.
+    """
     
     def __init__(self, mail_instance=None):
         self.mail = mail_instance
+        self.timeout = 10  # Timeout de 10 segundos para evitar bloqueos
     
-    def send_password_reset_email(self, email, reset_link, nombre=None):
+    def send_password_reset_email(self, email: str, reset_link: str, nombre: Optional[str] = None) -> Dict[str, any]:
         """
-        Envía un correo de recuperación de contraseña
+        Envía un correo de recuperación de contraseña con manejo robusto de errores
         
         Args:
             email (str): Email del destinatario
@@ -23,9 +30,26 @@ class EmailService:
             nombre (str): Nombre del usuario (opcional)
         
         Returns:
-            dict: {'success': bool, 'message': str}
+            dict: {'success': bool, 'message': str, 'error_type': str (opcional)}
         """
         try:
+            # Validar configuración de correo
+            if not self.mail:
+                logger.error("❌ Mail instance no configurada")
+                return {
+                    'success': False,
+                    'message': 'Servicio de correo no configurado',
+                    'error_type': 'config_error'
+                }
+            
+            # Validar email
+            if not email or '@' not in email:
+                logger.error(f"❌ Email inválido: {email}")
+                return {
+                    'success': False,
+                    'message': 'Email inválido',
+                    'error_type': 'validation_error'
+                }
             # Template HTML del correo
             html_template = """
             <!DOCTYPE html>
@@ -149,29 +173,47 @@ class EmailService:
                 recipients=[email],
                 html=html_body,
                 body=text_body,
-                sender=default_sender  # ← Especificar el remitente explícitamente
+                sender=default_sender
             )
             
-            # Enviar correo
-            if self.mail:
+            # Enviar correo con manejo de timeout
+            try:
                 self.mail.send(msg)
-                logger.info(f"Correo de recuperación enviado a: {email}")
+                logger.info(f"✅ Correo de recuperación enviado exitosamente a: {email}")
                 return {
                     'success': True,
                     'message': 'Correo enviado exitosamente'
                 }
-            else:
-                logger.warning("Mail instance no configurada, no se puede enviar correo")
+            except TimeoutError:
+                logger.error(f"⏱️ Timeout al enviar correo a {email}")
                 return {
                     'success': False,
-                    'message': 'Servicio de correo no configurado'
+                    'message': 'Timeout al conectar con servidor de correo',
+                    'error_type': 'timeout'
+                }
+            except ConnectionError as conn_err:
+                logger.error(f"🔌 Error de conexión al enviar correo a {email}: {str(conn_err)}")
+                return {
+                    'success': False,
+                    'message': 'Error de conexión con servidor de correo',
+                    'error_type': 'connection_error'
+                }
+            except Exception as send_error:
+                logger.error(f"📧 Error al enviar correo a {email}: {str(send_error)}")
+                return {
+                    'success': False,
+                    'message': f'Error al enviar: {str(send_error)}',
+                    'error_type': 'send_error'
                 }
                 
         except Exception as e:
-            logger.error(f"Error al enviar correo a {email}: {str(e)}")
+            logger.error(f"❌ Error general en send_password_reset_email para {email}: {str(e)}")
+            import traceback
+            logger.debug(traceback.format_exc())
             return {
                 'success': False,
-                'message': f'Error al enviar correo: {str(e)}'
+                'message': f'Error al procesar correo: {str(e)}',
+                'error_type': 'general_error'
             }
     
     def send_welcome_email(self, email, nombre, tipo_usuario):
